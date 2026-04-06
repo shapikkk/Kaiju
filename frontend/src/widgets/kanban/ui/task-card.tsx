@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent } from '@shared/ui/card';
-import { TagBadge } from '@/components/tag-badge';
+import { TagBadge } from '@shared/ui/tag-badge';
 import { PRIORITY_CONFIG } from "@shared/types";
 import type { Task } from "@shared/types";
 import { MessageSquare, Paperclip, Calendar, GripVertical } from 'lucide-react';

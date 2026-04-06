@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from '@app/providers/theme-provider';
 import { TooltipProvider } from '@shared/ui/tooltip';
 import { AuthProvider } from '@entities/user/model/useAuth';
-import { AppLayout } from '@/components/app-layout';
+import { AppLayout } from '@widgets/app-layout/ui/app-layout';
 import { ParticlesBackground } from '@shared/ui/particles-background';
 import { Toaster } from '@shared/ui/sonner';
 import { BoardPage } from '@/pages/board-page';

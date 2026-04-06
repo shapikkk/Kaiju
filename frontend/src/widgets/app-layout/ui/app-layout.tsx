@@ -1,7 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { SidebarInset, SidebarProvider } from '@shared/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
-import { TitleBar } from '@/components/title-bar';
+import { AppSidebar } from '@widgets/app-sidebar/ui/app-sidebar';
+import { TitleBar } from '@widgets/title-bar/ui/title-bar';
 import { useAuth } from '@entities/user/model/useAuth';
 import { Loader2 } from 'lucide-react';
 

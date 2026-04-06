@@ -5,7 +5,7 @@ import { Card, CardContent } from '@shared/ui/card';
 import { Input } from '@shared/ui/input';
 import { Badge } from '@shared/ui/badge';
 import { ScrollArea } from '@shared/ui/scroll-area';
-import { AttachmentSection } from '@/components/attachment-section';
+import { AttachmentSection } from '@features/attachments/ui/attachment-section';
 import {
   useTask,
   useCreateComment,

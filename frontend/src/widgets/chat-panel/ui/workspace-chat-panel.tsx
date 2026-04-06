@@ -9,7 +9,7 @@ import {
   ContextMenu, ContextMenuContent, ContextMenuItem,
   ContextMenuSeparator, ContextMenuTrigger,
 } from '@shared/ui/context-menu';
-import { ChatInput } from './chat-input';
+import { ChatInput } from '@features/send-message/ui/chat-input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +27,7 @@ import {
   ImageIcon, Pencil, Trash2, MessageSquarePlus, ArrowLeft,
   Check, CheckCheck, Copy, Download
 } from 'lucide-react';
-import { UserMiniProfile } from '@/components/user-mini-profile';
+import { UserMiniProfile } from '@entities/user/ui/user-mini-profile';
 import { Button } from '@shared/ui/button';
 import type { WorkspaceMessage, DirectMessage, Conversation, WorkspaceMember } from "@shared/types";
 

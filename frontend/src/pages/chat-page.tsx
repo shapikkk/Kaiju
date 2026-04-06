@@ -8,7 +8,7 @@ import { useWorkspaces } from '@shared/lib/api/useApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dmApi } from '@entities/conversation/api/dm';
 import apiClient from '@shared/lib/api/client';
-import { ChatInput } from '@/components/chat-input';
+import { ChatInput } from '@features/send-message/ui/chat-input';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
@@ -48,9 +48,9 @@ import {
   Download,
 } from 'lucide-react';
 import type { Channel, WorkspaceMessage, DirectMessage, Conversation, WorkspaceMember } from "@shared/types";
-import { UserMiniProfile } from '@/components/user-mini-profile';
-import { DMProfileModal } from '@/components/dm-profile-modal';
-import { CreateChannelDialog, EditChannelDialog } from '@/components/channel-manage-dialog';
+import { UserMiniProfile } from '@entities/user/ui/user-mini-profile';
+import { DMProfileModal } from '@entities/conversation/ui/dm-profile-modal';
+import { CreateChannelDialog, EditChannelDialog } from '@features/channel-manage/ui/channel-manage-dialog';
 type ChatMsg = WorkspaceMessage | DirectMessage;
 type ActiveChat =
   | { type: 'channel'; channel: Channel }

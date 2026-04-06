@@ -3,7 +3,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
-import { TaskCard } from '@/components/task-card';
+import { TaskCard } from '@widgets/kanban/ui/task-card';
 import { ScrollArea } from '@shared/ui/scroll-area';
 import type { Column, Task } from "@shared/types";
 

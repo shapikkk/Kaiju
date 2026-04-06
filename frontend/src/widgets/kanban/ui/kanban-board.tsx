@@ -12,8 +12,8 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { useState } from 'react';
-import { KanbanColumn } from '@/components/kanban-column';
-import { TaskCard } from '@/components/task-card';
+import { KanbanColumn } from '@widgets/kanban/ui/kanban-column';
+import { TaskCard } from '@widgets/kanban/ui/task-card';
 import { useMoveTask } from '@shared/lib/api/useApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';

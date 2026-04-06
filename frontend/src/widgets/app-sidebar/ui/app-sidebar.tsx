@@ -17,10 +17,10 @@ import {
   SidebarRail,
 } from '@shared/ui/sidebar';
 import { useWorkspaces, useBoards } from '@shared/lib/api/useApi';
-import { CreateBoardDialog } from '@/components/create-board-dialog';
-import { CreateWorkspaceDialog } from '@/components/create-workspace-dialog';
-import { InviteMemberDialog } from '@/components/invite-member-dialog';
-import { WorkspaceSettingsDialog } from '@/components/workspace-settings-dialog';
+import { CreateBoardDialog } from '@features/create-board/ui/create-board-dialog';
+import { CreateWorkspaceDialog } from '@features/create-workspace/ui/create-workspace-dialog';
+import { InviteMemberDialog } from '@features/invite-member/ui/invite-member-dialog';
+import { WorkspaceSettingsDialog } from '@features/workspace-settings/ui/workspace-settings-dialog';
 import {
   LayoutDashboard,
   Plus,
@@ -41,7 +41,7 @@ import {
   DropdownMenuTrigger,
 } from '@shared/ui/dropdown-menu';
 import { authApi } from '@entities/user/api/auth';
-import { useTotalUnreadDMs } from '@/components/workspace-chat-panel';
+import { useTotalUnreadDMs } from '@widgets/chat-panel/ui/workspace-chat-panel';
 
 export function AppSidebar() {
   const navigate = useNavigate();

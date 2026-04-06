@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@entities/user/model/useAuth';
 import { authApi } from '@entities/user/api/auth';
 import { Button } from '@shared/ui/button';
-import { GlobalSearch } from '@/components/global-search';
+import { GlobalSearch } from '@features/search/ui/global-search';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +14,8 @@ import {
 } from '@shared/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
 import { SidebarTrigger } from '@shared/ui/sidebar';
-import { UserProfileDialog } from '@/components/user-profile-dialog';
-import { useTotalUnreadDMs } from '@/components/workspace-chat-panel';
+import { UserProfileDialog } from '@entities/user/ui/user-profile-dialog';
+import { useTotalUnreadDMs } from '@widgets/chat-panel/ui/workspace-chat-panel';
 import { useState } from 'react';
 import { useActiveWorkspace } from '@entities/channel/model/useActiveWorkspace';
 

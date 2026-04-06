@@ -1,8 +1,8 @@
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { KanbanBoard } from '@/components/kanban-board';
-import { TaskDetailPanel } from '@/components/task-detail-panel';
-import { CreateTaskDialog } from '@/components/create-task-dialog';
+import { KanbanBoard } from '@widgets/kanban/ui/kanban-board';
+import { TaskDetailPanel } from '@widgets/task-detail/ui/task-detail-panel';
+import { CreateTaskDialog } from '@features/create-task/ui/create-task-dialog';
 import { useBoard, useSprints, useCreateSprint, useCreateEpic } from '@shared/lib/api/useApi';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';

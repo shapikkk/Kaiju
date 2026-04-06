@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useWorkspaces } from '@shared/lib/api/useApi';
-import { CreateWorkspaceDialog } from '@/components/create-workspace-dialog';
+import { CreateWorkspaceDialog } from '@features/create-workspace/ui/create-workspace-dialog';
 import { Button } from '@shared/ui/button';
 import { Loader2, LayoutDashboard } from 'lucide-react';
 

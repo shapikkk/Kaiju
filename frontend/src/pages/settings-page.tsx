@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@app/providers/theme-provider';
 import { useAppearance } from '@shared/hooks/useAppearance';
 import type { AccentTheme, BaseTheme } from '@shared/hooks/useAppearance';
 import { useActiveWorkspace } from '@entities/channel/model/useActiveWorkspace';
