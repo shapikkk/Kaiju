@@ -1,0 +1,132 @@
+# Kaiju — Unified Local Dev Environment
+# Usage: docker compose up --build
+#
+# Port map (host → container):
+#   http://localhost:8000  → Laravel API  (backend)
+#   ws://localhost:8080    → Laravel Reverb WebSocket  (reverb)
+#   http://localhost:5173  → Vite dev server  (frontend)
+#   localhost:6379         → Redis  (redis)
+#
+# DB note: project uses SQLite — the database file is mounted as part of
+# ./backend and lives at backend/database/database.sqlite. No DB container needed.
+
+services:
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - kaiju
+
+  # ── Laravel API ────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    ports:
+      - "8000:8000"
+    environment:
+      # Override .env values for Docker internal networking
+      # Backend uses 'reverb' service name for server-to-server broadcasting
+      REVERB_HOST: reverb
+      REVERB_SERVER_HOST: reverb
+      PUSHER_HOST: reverb
+      REDIS_HOST: redis
+      CACHE_DRIVER: redis
+      QUEUE_CONNECTION: redis
+    command: sh -c "composer install --no-interaction --prefer-dist --ignore-platform-reqs && php artisan serve --host=0.0.0.0 --port=8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - kaiju
+
+  # ── Laravel Reverb WebSocket Server ────────────────────────────────────────
+  reverb:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    ports:
+      - "8080:8080"
+    environment:
+      REVERB_HOST: reverb
+      REVERB_PORT: 8080
+      REDIS_HOST: redis
+    command: sh -c "php artisan reverb:start --host=0.0.0.0 --port=8080 --debug"
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - kaiju
+
+  # ── Queue Worker ───────────────────────────────────────────────────────────
+  queue:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    environment:
+      # Queue worker uses 'reverb' service name for server-to-server broadcasting
+      REVERB_HOST: reverb
+      REVERB_SERVER_HOST: reverb
+      PUSHER_HOST: reverb
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    command: sh -c "php artisan queue:work --tries=3 --sleep=3"
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - kaiju
+
+  # ── Vite Dev Server ────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules   # isolate node_modules from Windows host FS
+    ports:
+      - "5173:5173"
+    environment:
+      # Tells vite.config.ts to skip the Electron plugin (no display in container)
+      VITE_WEB_ONLY: "true"
+      # Prevents downloading the ~150 MB Electron binary during yarn install
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    command: sh -c "yarn install --frozen-lockfile && yarn dev"
+    networks:
+      - kaiju
+
+networks:
+  kaiju:
+    driver: bridge
+
+volumes:
+  vendor_data:
+  frontend_node_modules:

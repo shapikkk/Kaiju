@@ -1,0 +1,17 @@
+/vendor
+/node_modules
+.env
+.phpunit.result.cache
+/public/storage
+/storage/app/public
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/app/*
+!/storage/app/.gitkeep
+!/storage/app/public
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+Homestead.json
+Homestead.yaml
+auth.json
+.DS_Store
