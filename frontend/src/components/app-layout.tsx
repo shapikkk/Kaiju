@@ -2,7 +2,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { SidebarInset, SidebarProvider } from '@shared/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { TitleBar } from '@/components/title-bar';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@entities/user/model/useAuth';
 import { Loader2 } from 'lucide-react';
 
 export function AppLayout() {

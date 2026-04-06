@@ -12,7 +12,7 @@ import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { Label } from '@shared/ui/label';
 import { Textarea } from '@shared/ui/textarea';
-import { useCreateBoard } from '@/hooks/useApi';
+import { useCreateBoard } from '@shared/lib/api/useApi';
 import { Loader2 } from 'lucide-react';
 import type { CreateBoardPayload } from "@shared/types";
 

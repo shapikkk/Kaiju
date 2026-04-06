@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useVerifyEmail, useResendVerification } from '@/hooks/useApi';
+import { useAuth } from '@entities/user/model/useAuth';
+import { useVerifyEmail, useResendVerification } from '@shared/lib/api/useApi';
 import { Button } from '@shared/ui/button';
 import {
   Card,

@@ -14,8 +14,8 @@ import {
   useUpdateTask,
   useTags,
   useEpics,
-} from '@/hooks/useApi';
-import { useCurrentUser } from '@/hooks/useAuth';
+} from '@shared/lib/api/useApi';
+import { useCurrentUser } from '@entities/user/model/useAuth';
 import { PRIORITY_CONFIG } from "@shared/types";
 import type { Priority, UpdateTaskPayload, User, Tag, Epic, Sprint } from "@shared/types";
 import {

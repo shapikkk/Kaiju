@@ -1,18 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { boardsApi } from '@/api/boards';
-import { tasksApi } from '@/api/tasks';
-import { workspacesApi } from '@/api/workspaces';
-import { invitesApi } from '@/api/invites';
-import { membersApi } from '@/api/members';
-import { verificationApi } from '@/api/verification';
-import { profileApi } from '@/api/profile';
-import { columnsApi } from '@/api/columns';
-import { commentsApi } from '@/api/comments';
-import { attachmentsApi } from '@/api/attachments';
-import { epicsApi, tagsApi } from '@/api/epics-tags';
-import { sprintsApi } from '@/api/sprints';
-import { searchApi } from '@/api/search';
+import { boardsApi } from '@entities/board/api/boards';
+import { tasksApi } from '@entities/board/api/tasks';
+import { workspacesApi } from '@entities/workspace/api/workspaces';
+import { invitesApi } from '@features/invite-member/api/invites';
+import { membersApi } from '@entities/user/api/members';
+import { verificationApi } from '@features/auth/api/verification';
+import { profileApi } from '@entities/user/api/profile';
+import { columnsApi } from '@entities/board/api/columns';
+import { commentsApi } from '@entities/message/api/comments';
+import { attachmentsApi } from '@entities/message/api/attachments';
+import { epicsApi, tagsApi } from '@entities/board/api/epics-tags';
+import { sprintsApi } from '@entities/board/api/sprints';
+import { searchApi } from '@features/search/api/search';
 import type {
   CreateBoardPayload,
   CreateCommentPayload,

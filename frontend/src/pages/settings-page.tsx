@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useTheme } from '@/components/theme-provider';
 import { useAppearance } from '@shared/hooks/useAppearance';
 import type { AccentTheme, BaseTheme } from '@shared/hooks/useAppearance';
-import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
-import { useAuth } from '@/hooks/useAuth';
+import { useActiveWorkspace } from '@entities/channel/model/useActiveWorkspace';
+import { useAuth } from '@entities/user/model/useAuth';
 import {
   useWorkspace,
   useUpdateWorkspace,
@@ -12,7 +12,7 @@ import {
   useUpdateProfileDetails,
   useUpdatePassword,
   useUpdateNotificationPreferences,
-} from '@/hooks/useApi';
+} from '@shared/lib/api/useApi';
 import { cn } from '@shared/lib/utils';
 import {
   Card,

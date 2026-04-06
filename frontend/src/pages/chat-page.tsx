@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useChannelChat, useChannels, useChannelManagement } from '@/hooks/useChannelChat';
-import { useConversations, useDirectMessages } from '@/hooks/useDirectMessages';
-import { useWorkspaces } from '@/hooks/useApi';
+import { useAuth } from '@entities/user/model/useAuth';
+import { useChannelChat, useChannels, useChannelManagement } from '@entities/channel/model/useChannelChat';
+import { useConversations, useDirectMessages } from '@entities/conversation/model/useDirectMessages';
+import { useWorkspaces } from '@shared/lib/api/useApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dmApi } from '@/api/dm';
+import { dmApi } from '@entities/conversation/api/dm';
 import apiClient from '@shared/lib/api/client';
 import { ChatInput } from '@/components/chat-input';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';

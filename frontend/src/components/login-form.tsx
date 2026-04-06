@@ -1,9 +1,9 @@
 import { cn } from "@shared/lib/utils"
 import { Button } from "@shared/ui/button"
-import { authApi } from "@/api/auth"
+import { authApi } from "@entities/user/api/auth"
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@entities/user/model/useAuth"
 import {
   Card,
   CardContent,

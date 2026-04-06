@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dmApi } from '@/api/dm';
+import { dmApi } from '@entities/conversation/api/dm';
 import { createEchoInstance } from '@shared/lib/websocket/echo';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@entities/user/model/useAuth';
 import type { Conversation, DirectMessage } from "@shared/types";
 
 export function useConversations(workspaceSlug: string | undefined) {

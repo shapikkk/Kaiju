@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { authApi } from '@/api/auth';
+import { authApi } from '@entities/user/api/auth';
 import type { User } from "@shared/types";
 
 interface AuthContextValue {

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { authApi } from "@/api/auth"
-import { useAuth } from "@/hooks/useAuth"
+import { authApi } from "@entities/user/api/auth"
+import { useAuth } from "@entities/user/model/useAuth"
 import { Button } from "@shared/ui/button"
 import {
   Card,

@@ -12,7 +12,7 @@ import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { Label } from '@shared/ui/label';
 import { Textarea } from '@shared/ui/textarea';
-import { useCreateWorkspace } from '@/hooks/useApi';
+import { useCreateWorkspace } from '@shared/lib/api/useApi';
 import { Loader2 } from 'lucide-react';
 
 interface CreateWorkspaceDialogProps {

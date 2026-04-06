@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@entities/user/model/useAuth';
 import {
   useUserProfile,
   useUpdateProfile,
   useUploadAvatar,
   useUploadBanner,
-} from '@/hooks/useProfile';
+} from '@entities/user/model/useProfile';
 import {
   Dialog,
   DialogContent,

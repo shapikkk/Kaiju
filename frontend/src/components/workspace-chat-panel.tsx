@@ -17,11 +17,11 @@ import {
   DropdownMenuTrigger,
 } from '@shared/ui/dropdown-menu';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
-import { useChannels, useChannelChat } from '@/hooks/useChannelChat';
-import { useConversations, useDirectMessages } from '@/hooks/useDirectMessages';
+import { useAuth } from '@entities/user/model/useAuth';
+import { useChannels, useChannelChat } from '@entities/channel/model/useChannelChat';
+import { useConversations, useDirectMessages } from '@entities/conversation/model/useDirectMessages';
 import apiClient from '@shared/lib/api/client';
-import { dmApi } from '@/api/dm';
+import { dmApi } from '@entities/conversation/api/dm';
 import {
   Users, Reply, FileText,
   ImageIcon, Pencil, Trash2, MessageSquarePlus, ArrowLeft,

@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useAcceptInvite } from '@/hooks/useApi';
+import { useAuth } from '@entities/user/model/useAuth';
+import { useAcceptInvite } from '@shared/lib/api/useApi';
 import { Button } from '@shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/ui/card';
 import {

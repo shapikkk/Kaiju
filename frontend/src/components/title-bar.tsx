@@ -1,7 +1,7 @@
 import { Minus, Square, X, ChevronLeft, ChevronRight, LogOut, User as UserIcon, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { authApi } from '@/api/auth';
+import { useAuth } from '@entities/user/model/useAuth';
+import { authApi } from '@entities/user/api/auth';
 import { Button } from '@shared/ui/button';
 import { GlobalSearch } from '@/components/global-search';
 import {
@@ -17,7 +17,7 @@ import { SidebarTrigger } from '@shared/ui/sidebar';
 import { UserProfileDialog } from '@/components/user-profile-dialog';
 import { useTotalUnreadDMs } from '@/components/workspace-chat-panel';
 import { useState } from 'react';
-import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { useActiveWorkspace } from '@entities/channel/model/useActiveWorkspace';
 
 export function TitleBar() {
   const api = window.electronAPI;

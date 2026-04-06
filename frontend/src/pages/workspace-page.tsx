@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
-import { useBoards } from '@/hooks/useApi';
+import { useBoards } from '@shared/lib/api/useApi';
 import { Loader2 } from 'lucide-react';
 
 /**

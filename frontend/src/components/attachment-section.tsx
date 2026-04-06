@@ -4,7 +4,7 @@ import {
   useAttachments,
   useUploadAttachment,
   useDeleteAttachment,
-} from '@/hooks/useApi';
+} from '@shared/lib/api/useApi';
 import apiClient from '@shared/lib/api/client';
 import type { Attachment } from "@shared/types";
 import {

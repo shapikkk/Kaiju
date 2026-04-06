@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { KanbanBoard } from '@/components/kanban-board';
 import { TaskDetailPanel } from '@/components/task-detail-panel';
 import { CreateTaskDialog } from '@/components/create-task-dialog';
-import { useBoard, useSprints, useCreateSprint, useCreateEpic } from '@/hooks/useApi';
+import { useBoard, useSprints, useCreateSprint, useCreateEpic } from '@shared/lib/api/useApi';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import {

@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAcceptInviteLink } from '@/hooks/useApi';
+import { useAcceptInviteLink } from '@shared/lib/api/useApi';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@shared/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@entities/user/model/useAuth';
 
 export function AcceptInvitePage() {
   const { token } = useParams<{ token: string }>();

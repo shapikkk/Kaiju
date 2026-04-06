@@ -1,15 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { chatApi } from '@/api/chat';
+import { chatApi } from '@entities/channel/api/chat';
 import { createEchoInstance } from '@shared/lib/websocket/echo';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@entities/user/model/useAuth';
 import type { WorkspaceMessage } from "@shared/types";
-
-export interface OnlineMember {
-  id: number;
-  name: string;
-  avatar_url: string | null;
-}
+import type { OnlineMember } from './useChannelChat';
 
 export function useWorkspaceChat(workspaceSlug: string | undefined) {
   const queryClient = useQueryClient();

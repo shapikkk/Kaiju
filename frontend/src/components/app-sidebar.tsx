@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
+import { useAuth } from '@entities/user/model/useAuth';
+import { useActiveWorkspace } from '@entities/channel/model/useActiveWorkspace';
 import {
   Sidebar,
   SidebarContent,
@@ -16,7 +16,7 @@ import {
   SidebarMenuSkeleton,
   SidebarRail,
 } from '@shared/ui/sidebar';
-import { useWorkspaces, useBoards } from '@/hooks/useApi';
+import { useWorkspaces, useBoards } from '@shared/lib/api/useApi';
 import { CreateBoardDialog } from '@/components/create-board-dialog';
 import { CreateWorkspaceDialog } from '@/components/create-workspace-dialog';
 import { InviteMemberDialog } from '@/components/invite-member-dialog';
@@ -40,7 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@shared/ui/dropdown-menu';
-import { authApi } from '@/api/auth';
+import { authApi } from '@entities/user/api/auth';
 import { useTotalUnreadDMs } from '@/components/workspace-chat-panel';
 
 export function AppSidebar() {

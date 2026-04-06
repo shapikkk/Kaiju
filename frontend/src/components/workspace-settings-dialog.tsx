@@ -21,8 +21,8 @@ import {
   useWorkspaceMembers,
   useUpdateMemberRole,
   useRemoveMember,
-} from '@/hooks/useApi';
-import { useCurrentUser } from '@/hooks/useAuth';
+} from '@shared/lib/api/useApi';
+import { useCurrentUser } from '@entities/user/model/useAuth';
 import { Loader2, Trash2, Shield, ShieldCheck, Crown } from 'lucide-react';
 import type { Workspace, WorkspaceMember } from "@shared/types";
 import type { AxiosError } from 'axios';
