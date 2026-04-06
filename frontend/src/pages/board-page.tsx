@@ -4,8 +4,8 @@ import { KanbanBoard } from '@/components/kanban-board';
 import { TaskDetailPanel } from '@/components/task-detail-panel';
 import { CreateTaskDialog } from '@/components/create-task-dialog';
 import { useBoard, useSprints, useCreateSprint, useCreateEpic } from '@/hooks/useApi';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@shared/ui/button';
+import { Input } from '@shared/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -13,9 +13,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@shared/ui/dialog';
 import { Plus, Zap, Timer } from 'lucide-react';
-import type { User } from '@/types';
+import type { User } from "@shared/types";
 
 export function BoardPage() {
   const { workspaceSlug = '', boardSlug = '' } = useParams();

@@ -1,5 +1,5 @@
-import apiClient from './client';
-import type { ApiListResponse, ApiResponse, Attachment } from '@/types';
+import apiClient from '@shared/lib/api/client';
+import type { ApiListResponse, ApiResponse, Attachment } from "@shared/types";
 
 export const attachmentsApi = {
   list: async (taskId: number): Promise<Attachment[]> => {

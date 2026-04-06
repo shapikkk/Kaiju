@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@shared/ui/button';
+import { Card, CardContent } from '@shared/ui/card';
+import { Input } from '@shared/ui/input';
+import { Badge } from '@shared/ui/badge';
+import { ScrollArea } from '@shared/ui/scroll-area';
 import { AttachmentSection } from '@/components/attachment-section';
 import {
   useTask,
@@ -16,15 +16,15 @@ import {
   useEpics,
 } from '@/hooks/useApi';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { PRIORITY_CONFIG } from '@/types';
-import type { Priority, UpdateTaskPayload, User, Tag, Epic, Sprint } from '@/types';
+import { PRIORITY_CONFIG } from "@shared/types";
+import type { Priority, UpdateTaskPayload, User, Tag, Epic, Sprint } from "@shared/types";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@shared/ui/select';
 import {
   Calendar,
   Clock,

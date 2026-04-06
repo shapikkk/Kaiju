@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarRail,
-} from '@/components/ui/sidebar';
+} from '@shared/ui/sidebar';
 import { useWorkspaces, useBoards } from '@/hooks/useApi';
 import { CreateBoardDialog } from '@/components/create-board-dialog';
 import { CreateWorkspaceDialog } from '@/components/create-workspace-dialog';
@@ -39,7 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@shared/ui/dropdown-menu';
 import { authApi } from '@/api/auth';
 import { useTotalUnreadDMs } from '@/components/workspace-chat-panel';
 

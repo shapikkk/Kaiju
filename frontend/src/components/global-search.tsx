@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { useWorkspaceSearch } from '@/hooks/useApi';
-import { PRIORITY_CONFIG } from '@/types';
+import { PRIORITY_CONFIG } from "@shared/types";
 import {
   Command,
   CommandDialog,
@@ -12,8 +12,8 @@ import {
   CommandGroup,
   CommandItem,
   CommandSeparator,
-} from '@/components/ui/command';
-import { Button } from '@/components/ui/button';
+} from '@shared/ui/command';
+import { Button } from '@shared/ui/button';
 import { Search, SquareCheckBig, Kanban, User, Loader2 } from 'lucide-react';
 
 export function GlobalSearch() {

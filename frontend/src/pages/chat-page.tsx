@@ -7,26 +7,26 @@ import { useConversations, useDirectMessages } from '@/hooks/useDirectMessages';
 import { useWorkspaces } from '@/hooks/useApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dmApi } from '@/api/dm';
-import apiClient from '@/api/client';
+import apiClient from '@shared/lib/api/client';
 import { ChatInput } from '@/components/chat-input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { LightBox } from '@/components/ui/lightbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
+import { Button } from '@shared/ui/button';
+import { Input } from '@shared/ui/input';
+import { LightBox } from '@shared/ui/lightbox';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '@/components/ui/context-menu';
+} from '@shared/ui/context-menu';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+} from '@shared/ui/dropdown-menu';
+import { cn } from '@shared/lib/utils';
 import {
   Hash,
   Search,
@@ -47,7 +47,7 @@ import {
   Copy,
   Download,
 } from 'lucide-react';
-import type { Channel, WorkspaceMessage, DirectMessage, Conversation, WorkspaceMember } from '@/types';
+import type { Channel, WorkspaceMessage, DirectMessage, Conversation, WorkspaceMember } from "@shared/types";
 import { UserMiniProfile } from '@/components/user-mini-profile';
 import { DMProfileModal } from '@/components/dm-profile-modal';
 import { CreateChannelDialog, EditChannelDialog } from '@/components/channel-manage-dialog';

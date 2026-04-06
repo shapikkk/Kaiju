@@ -2,7 +2,7 @@ import { Minus, Square, X, ChevronLeft, ChevronRight, LogOut, User as UserIcon, 
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/api/auth';
-import { Button } from '@/components/ui/button';
+import { Button } from '@shared/ui/button';
 import { GlobalSearch } from '@/components/global-search';
 import {
   DropdownMenu,
@@ -11,9 +11,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+} from '@shared/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
+import { SidebarTrigger } from '@shared/ui/sidebar';
 import { UserProfileDialog } from '@/components/user-profile-dialog';
 import { useTotalUnreadDMs } from '@/components/workspace-chat-panel';
 import { useState } from 'react';

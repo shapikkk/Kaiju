@@ -1,26 +1,26 @@
 ﻿import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
-} from '@/components/ui/sheet';
-import { LightBox } from '@/components/ui/lightbox';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from '@shared/ui/sheet';
+import { LightBox } from '@shared/ui/lightbox';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@shared/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
 import {
   ContextMenu, ContextMenuContent, ContextMenuItem,
   ContextMenuSeparator, ContextMenuTrigger,
-} from '@/components/ui/context-menu';
+} from '@shared/ui/context-menu';
 import { ChatInput } from './chat-input';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@shared/ui/dropdown-menu';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useChannels, useChannelChat } from '@/hooks/useChannelChat';
 import { useConversations, useDirectMessages } from '@/hooks/useDirectMessages';
-import apiClient from '@/api/client';
+import apiClient from '@shared/lib/api/client';
 import { dmApi } from '@/api/dm';
 import {
   Users, Reply, FileText,
@@ -28,8 +28,8 @@ import {
   Check, CheckCheck, Copy, Download
 } from 'lucide-react';
 import { UserMiniProfile } from '@/components/user-mini-profile';
-import { Button } from '@/components/ui/button';
-import type { WorkspaceMessage, DirectMessage, Conversation, WorkspaceMember } from '@/types';
+import { Button } from '@shared/ui/button';
+import type { WorkspaceMessage, DirectMessage, Conversation, WorkspaceMember } from "@shared/types";
 
 interface Props {
   open: boolean;

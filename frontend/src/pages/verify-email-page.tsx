@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useVerifyEmail, useResendVerification } from '@/hooks/useApi';
-import { Button } from '@/components/ui/button';
+import { Button } from '@shared/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@shared/ui/card';
 import {
   Loader2,
   CheckCircle2,

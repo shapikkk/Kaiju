@@ -6,11 +6,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+} from '@shared/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
+import { Input } from '@shared/ui/input';
+import { Textarea } from '@shared/ui/textarea';
+import { Button } from '@shared/ui/button';
 import {
   Mail,
   AtSign,
@@ -30,16 +30,16 @@ import {
   Download,
   MessageSquare,
 } from 'lucide-react';
-import { LightBox } from '@/components/ui/lightbox';
+import { LightBox } from '@shared/ui/lightbox';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '@/components/ui/context-menu';
+} from '@shared/ui/context-menu';
 import { dmApi, type ConversationAttachment } from '@/api/dm';
-import type { Conversation } from '@/types';
+import type { Conversation } from "@shared/types";
 import { toast } from 'sonner';
 
 function getInitials(name: string) {

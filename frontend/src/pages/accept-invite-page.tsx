@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAcceptInviteLink } from '@/hooks/useApi';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@shared/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
 export function AcceptInvitePage() {

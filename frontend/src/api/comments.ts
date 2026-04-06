@@ -1,10 +1,10 @@
-import apiClient from './client';
+import apiClient from '@shared/lib/api/client';
 import type {
   ApiListResponse,
   ApiResponse,
   Comment,
   CreateCommentPayload,
-} from '@/types';
+} from "@shared/types";
 
 export const commentsApi = {
   list: async (taskId: number): Promise<Comment[]> => {

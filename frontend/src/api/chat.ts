@@ -1,5 +1,5 @@
-import apiClient from './client';
-import type { ApiListResponse, ApiResponse, Channel, CreateChannelPayload, UpdateChannelPayload, WorkspaceMessage } from '@/types';
+import apiClient from '@shared/lib/api/client';
+import type { ApiListResponse, ApiResponse, Channel, CreateChannelPayload, UpdateChannelPayload, WorkspaceMessage } from "@shared/types";
 
 export const chatApi = {
   list: async (workspaceSlug: string): Promise<WorkspaceMessage[]> => {

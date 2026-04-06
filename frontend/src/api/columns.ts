@@ -1,10 +1,10 @@
-import apiClient from './client';
+import apiClient from '@shared/lib/api/client';
 import type {
   ApiListResponse,
   ApiResponse,
   Column,
   CreateColumnPayload,
-} from '@/types';
+} from "@shared/types";
 
 export const columnsApi = {
   list: async (boardId: number): Promise<Column[]> => {

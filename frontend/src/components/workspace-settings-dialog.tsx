@@ -4,19 +4,19 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+} from '@shared/ui/dialog';
+import { Button } from '@shared/ui/button';
+import { Avatar, AvatarFallback } from '@shared/ui/avatar';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
+} from '@shared/ui/select';
+import { ScrollArea } from '@shared/ui/scroll-area';
+import { Separator } from '@shared/ui/separator';
+import { Badge } from '@shared/ui/badge';
 import {
   useWorkspaceMembers,
   useUpdateMemberRole,
@@ -24,7 +24,7 @@ import {
 } from '@/hooks/useApi';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { Loader2, Trash2, Shield, ShieldCheck, Crown } from 'lucide-react';
-import type { Workspace, WorkspaceMember } from '@/types';
+import type { Workspace, WorkspaceMember } from "@shared/types";
 import type { AxiosError } from 'axios';
 import { useState } from 'react';
 

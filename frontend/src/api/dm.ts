@@ -1,5 +1,5 @@
-import apiClient from './client';
-import type { ApiListResponse, ApiResponse, Conversation, DirectMessage } from '@/types';
+import apiClient from '@shared/lib/api/client';
+import type { ApiListResponse, ApiResponse, Conversation, DirectMessage } from "@shared/types";
 
 export interface ConversationAttachment {
   id: number;

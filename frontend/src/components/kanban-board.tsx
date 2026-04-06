@@ -17,7 +17,7 @@ import { TaskCard } from '@/components/task-card';
 import { useMoveTask } from '@/hooks/useApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import type { Board, Column, Task } from '@/types';
+import type { Board, Column, Task } from "@shared/types";
 
 interface KanbanBoardProps {
   board: Board | undefined;

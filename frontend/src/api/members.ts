@@ -1,5 +1,5 @@
-import apiClient from './client';
-import type { ApiListResponse, WorkspaceMember } from '@/types';
+import apiClient from '@shared/lib/api/client';
+import type { ApiListResponse, WorkspaceMember } from "@shared/types";
 
 export const membersApi = {
   list: async (slug: string): Promise<WorkspaceMember[]> => {

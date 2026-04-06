@@ -6,21 +6,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from '@shared/ui/dialog';
+import { Button } from '@shared/ui/button';
+import { Input } from '@shared/ui/input';
+import { Label } from '@shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+} from '@shared/ui/select';
+import { Separator } from '@shared/ui/separator';
 import { useSendInvite, useGenerateInviteLink } from '@/hooks/useApi';
 import { Loader2, CheckCircle2, AlertCircle, Plus, X, Link as LinkIcon, Copy, Check } from 'lucide-react';
-import type { Workspace } from '@/types';
+import type { Workspace } from "@shared/types";
 import type { AxiosError } from 'axios';
 
 interface InviteMemberDialogProps {

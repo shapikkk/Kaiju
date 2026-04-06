@@ -5,13 +5,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from '@shared/ui/dialog';
+import { Button } from '@shared/ui/button';
+import { Input } from '@shared/ui/input';
+import { Label } from '@shared/ui/label';
+import { Separator } from '@shared/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/ui/tabs';
 import {
   useUpdateProfile,
   useUpdatePassword,

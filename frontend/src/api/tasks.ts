@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from '@shared/lib/api/client';
 import type {
   ApiListResponse,
   ApiResponse,
@@ -6,7 +6,7 @@ import type {
   MoveTaskPayload,
   Task,
   UpdateTaskPayload,
-} from '@/types';
+} from "@shared/types";
 
 export const tasksApi = {
   list: async (boardId: number): Promise<Task[]> => {

@@ -4,8 +4,8 @@ import {
 } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { TaskCard } from '@/components/task-card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Column, Task } from '@/types';
+import { ScrollArea } from '@shared/ui/scroll-area';
+import type { Column, Task } from "@shared/types";
 
 interface KanbanColumnProps {
   column: Column;

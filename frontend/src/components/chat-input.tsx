@@ -3,25 +3,25 @@ import {
   Reply, X, Paperclip, FileText, Pencil, Globe, ArrowUp,
   LayoutGrid, Plus, AtSign
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@shared/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
+import { Switch } from '@shared/ui/switch';
+import { Badge } from '@shared/ui/badge';
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuGroup,
   DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel
-} from '@/components/ui/dropdown-menu';
+} from '@shared/ui/dropdown-menu';
 import {
   Command, CommandEmpty, CommandGroup, CommandInput,
   CommandItem, CommandList,
-} from '@/components/ui/command';
+} from '@shared/ui/command';
 import {
   Popover, PopoverContent, PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@shared/ui/popover';
 import {
   Tooltip, TooltipContent, TooltipTrigger, TooltipProvider
-} from '@/components/ui/tooltip';
-import type { WorkspaceMessage, DirectMessage, WorkspaceMember } from '@/types';
+} from '@shared/ui/tooltip';
+import type { WorkspaceMessage, DirectMessage, WorkspaceMember } from "@shared/types";
 
 type ChatMsg = WorkspaceMessage | DirectMessage;
 

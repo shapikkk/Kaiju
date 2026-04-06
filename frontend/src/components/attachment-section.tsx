@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@shared/ui/button';
 import {
   useAttachments,
   useUploadAttachment,
   useDeleteAttachment,
 } from '@/hooks/useApi';
-import apiClient from '@/api/client';
-import type { Attachment } from '@/types';
+import apiClient from '@shared/lib/api/client';
+import type { Attachment } from "@shared/types";
 import {
   Paperclip,
   Upload,

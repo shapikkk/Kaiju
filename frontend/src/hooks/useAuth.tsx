@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { authApi } from '@/api/auth';
-import type { User } from '@/types';
+import type { User } from "@shared/types";
 
 interface AuthContextValue {
   user: User | null;

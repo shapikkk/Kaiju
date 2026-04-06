@@ -1,10 +1,10 @@
-import apiClient from './client';
+import apiClient from '@shared/lib/api/client';
 import type {
   ApiListResponse,
   ApiResponse,
   Board,
   CreateBoardPayload,
-} from '@/types';
+} from "@shared/types";
 
 export const boardsApi = {
   list: async (workspaceSlug: string): Promise<Board[]> => {

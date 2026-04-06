@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from '@shared/lib/api/client';
 
 export const verificationApi = {
   verify: async (params: {

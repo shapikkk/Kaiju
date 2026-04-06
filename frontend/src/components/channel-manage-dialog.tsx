@@ -4,11 +4,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from '@shared/ui/dialog';
+import { Input } from '@shared/ui/input';
+import { Button } from '@shared/ui/button';
 import { Hash, Trash2, Loader2 } from 'lucide-react';
-import type { Channel } from '@/types';
+import type { Channel } from "@shared/types";
 
 interface CreateChannelDialogProps {
   open: boolean;

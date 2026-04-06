@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from '@shared/lib/api/client';
 import type {
   ApiListResponse,
   ApiResponse,
@@ -6,7 +6,7 @@ import type {
   CreateTagPayload,
   Epic,
   Tag,
-} from '@/types';
+} from "@shared/types";
 
 export const epicsApi = {
   list: async (workspaceSlug: string): Promise<Epic[]> => {

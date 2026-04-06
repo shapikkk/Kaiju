@@ -1,5 +1,5 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@shared/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { TitleBar } from '@/components/title-bar';
 import { useAuth } from '@/hooks/useAuth';

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
+import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
+import { Button } from '@shared/ui/button';
 import { Briefcase, MapPin, Mail, MessageCircle } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useProfile';
 

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { chatApi } from '@/api/chat';
-import { createEchoInstance } from '@/lib/echo';
+import { createEchoInstance } from '@shared/lib/websocket/echo';
 import { useAuth } from '@/hooks/useAuth';
-import type { Channel, CreateChannelPayload, UpdateChannelPayload, WorkspaceMessage } from '@/types';
+import type { Channel, CreateChannelPayload, UpdateChannelPayload, WorkspaceMessage } from "@shared/types";
 
 export interface OnlineMember {
   id: number;

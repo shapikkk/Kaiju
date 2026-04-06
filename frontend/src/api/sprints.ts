@@ -1,11 +1,11 @@
-import apiClient from './client';
+import apiClient from '@shared/lib/api/client';
 import type {
   ApiListResponse,
   ApiResponse,
   CreateSprintPayload,
   Sprint,
   UpdateSprintPayload,
-} from '@/types';
+} from "@shared/types";
 
 export const sprintsApi = {
   list: async (boardId: number): Promise<Sprint[]> => {

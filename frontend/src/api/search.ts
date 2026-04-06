@@ -1,5 +1,5 @@
-import apiClient from './client';
-import type { SearchResults } from '@/types';
+import apiClient from '@shared/lib/api/client';
+import type { SearchResults } from "@shared/types";
 
 export const searchApi = {
   workspace: async (slug: string, q: string): Promise<SearchResults> => {

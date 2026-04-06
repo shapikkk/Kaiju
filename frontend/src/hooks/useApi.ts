@@ -25,7 +25,7 @@ import type {
   SearchResults,
   UpdateProfilePayload,
   UpdateTaskPayload,
-} from '@/types';
+} from "@shared/types";
 
 export function useWorkspaces() {
   return useQuery({

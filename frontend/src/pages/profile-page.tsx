@@ -13,15 +13,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
+} from '@shared/ui/dialog';
+import { Button } from '@shared/ui/button';
+import { Input } from '@shared/ui/input';
+import { Label } from '@shared/ui/label';
+import { Textarea } from '@shared/ui/textarea';
+import { Badge } from '@shared/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
+import { Skeleton } from '@shared/ui/skeleton';
+import { Separator } from '@shared/ui/separator';
 import {
   MapPin,
   Briefcase,
@@ -35,7 +35,7 @@ import {
   AlertCircle,
   CalendarRange,
 } from 'lucide-react';
-import type { UpdateProfilePayload, Experience } from '@/types';
+import type { UpdateProfilePayload, Experience } from "@shared/types";
 
 function getInitials(name: string): string {
   return name

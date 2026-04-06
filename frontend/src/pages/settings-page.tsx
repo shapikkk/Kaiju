@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTheme } from '@/components/theme-provider';
-import { useAppearance } from '@/hooks/useAppearance';
-import type { AccentTheme, BaseTheme } from '@/hooks/useAppearance';
+import { useAppearance } from '@shared/hooks/useAppearance';
+import type { AccentTheme, BaseTheme } from '@shared/hooks/useAppearance';
 import { useActiveWorkspace } from '@/hooks/useActiveWorkspace';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -13,20 +13,20 @@ import {
   useUpdatePassword,
   useUpdateNotificationPreferences,
 } from '@/hooks/useApi';
-import { cn } from '@/lib/utils';
+import { cn } from '@shared/lib/utils';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+} from '@shared/ui/card';
+import { Label } from '@shared/ui/label';
+import { Input } from '@shared/ui/input';
+import { Textarea } from '@shared/ui/textarea';
+import { Button } from '@shared/ui/button';
+import { Switch } from '@shared/ui/switch';
+import { Separator } from '@shared/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +34,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@shared/ui/dialog';
 import {
   User,
   Palette,

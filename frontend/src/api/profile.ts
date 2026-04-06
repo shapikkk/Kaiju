@@ -1,5 +1,5 @@
-import apiClient from './client';
-import type { User, UpdateProfilePayload } from '@/types';
+import apiClient from '@shared/lib/api/client';
+import type { User, UpdateProfilePayload } from "@shared/types";
 
 interface ProfileResponse {
   message: string;
