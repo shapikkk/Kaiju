@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { chatApi } from '@entities/channel/api/chat';
-import { createEchoInstance } from '@shared/lib/websocket/echo';
-import { useAuth } from '@entities/user/model/useAuth';
+import { chatApi } from '../api/chat';
+
 import type { WorkspaceMessage } from "@shared/types";
 import type { OnlineMember } from './useChannelChat';
 
+/**
+ * Workspace-wide chat hook — pure React Query consumer.
+ * WebSocket subscription is managed by the singleton realtimeManager.
+ */
 export function useWorkspaceChat(workspaceSlug: string | undefined) {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const [onlineMembers, setOnlineMembers] = useState<OnlineMember[]>([]);
+
 
   const queryKey = ['messages', workspaceSlug];
 
@@ -21,45 +22,13 @@ export function useWorkspaceChat(workspaceSlug: string | undefined) {
     gcTime: 10 * 60_000,
   });
 
-  useEffect(() => {
-    if (!workspaceSlug || !user) return;
-
-    const echo = createEchoInstance();
-    const channel = echo.join(`workspace.${workspaceSlug}`);
-
-    channel
-      .here((members: OnlineMember[]) => setOnlineMembers(members))
-      .joining((member: OnlineMember) => {
-        setOnlineMembers((prev) =>
-          prev.find((m) => m.id === member.id) ? prev : [...prev, member]
-        );
-      })
-      .leaving((member: OnlineMember) => {
-        setOnlineMembers((prev) => prev.filter((m) => m.id !== member.id));
-      })
-      .listen('.message.sent', (payload: WorkspaceMessage) => {
-        queryClient.setQueryData<WorkspaceMessage[]>(queryKey, (old) => {
-          if (!old) return [payload];
-          if (old.find((m) => m.id === payload.id)) return old;
-          return [...old, payload];
-        });
-      })
-      .listen('.message.updated', (payload: WorkspaceMessage) => {
-        queryClient.setQueryData<WorkspaceMessage[]>(queryKey, (old) =>
-          old ? old.map((m) => (m.id === payload.id ? payload : m)) : [payload]
-        );
-      })
-      .listen('.message.deleted', (payload: { id: number }) => {
-        queryClient.setQueryData<WorkspaceMessage[]>(queryKey, (old) =>
-          old ? old.filter((m) => m.id !== payload.id) : []
-        );
-      });
-
-    return () => {
-      echo.leave(`workspace.${workspaceSlug}`);
-      echo.disconnect();
-    };
-  }, [workspaceSlug, user]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Online members are seeded by the widget-layer WebSocket subscription
+  const { data: onlineMembers = [] } = useQuery<OnlineMember[]>({
+    queryKey: ['workspace-online', workspaceSlug],
+    queryFn: () => [],
+    enabled: !!workspaceSlug,
+    staleTime: Infinity,
+  });
 
   const sendMutation = useMutation({
     mutationFn: ({

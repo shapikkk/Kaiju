@@ -1,9 +1,9 @@
 import { cn } from "@shared/lib/utils"
 import { Button } from "@shared/ui/button"
-import { authApi } from "@entities/user/api/auth"
+import { authApi, useAuth } from '@shared/lib/auth/useAuth'
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { useAuth } from "@entities/user/model/useAuth"
+
 import {
   Card,
   CardContent,
@@ -39,8 +39,9 @@ export function LoginForm({
       await authApi.login({ email, password });
       await refreshUser();
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error authorization. Check your data.');
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(msg ?? 'Error authorization. Check your data.');
     } finally {
       setIsLoading(false);
     }

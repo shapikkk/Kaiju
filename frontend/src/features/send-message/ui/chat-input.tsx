@@ -21,6 +21,7 @@ import {
 import {
   Tooltip, TooltipContent, TooltipTrigger, TooltipProvider
 } from '@shared/ui/tooltip';
+import { PAGE_MENTIONS, MESSAGE_PRIORITIES } from '@shared/config/chat-constants';
 import type { WorkspaceMessage, DirectMessage, WorkspaceMember } from "@shared/types";
 
 type ChatMsg = WorkspaceMessage | DirectMessage;
@@ -36,26 +37,6 @@ interface ChatInputProps {
   isSending: boolean;
 }
 
-// TODO: Extract to API / Global State — fetch mentionable pages from workspace context
-const PAGE_MENTIONS = [
-  { type: "page", title: "Meeting Notes", image: "📝" },
-  { type: "page", title: "Project Dashboard", image: "📊" },
-  { type: "page", title: "Ideas & Brainstorming", image: "💡" },
-  { type: "page", title: "Calendar & Events", image: "📅" },
-  { type: "page", title: "Documentation", image: "📚" },
-  { type: "page", title: "Goals & Objectives", image: "🎯" },
-  { type: "page", title: "Budget Planning", image: "💰" },
-  { type: "page", title: "Team Directory", image: "👥" },
-  { type: "page", title: "Technical Specs", image: "🔧" },
-  { type: "page", title: "Analytics Report", image: "📈" },
-];
-
-// TODO: Extract to API / Global State — priorities should be configurable per workspace
-const MESSAGE_PRIORITIES = [
-  { name: "Standard" },
-  { name: "High" },
-  { name: "Urgent", badge: "Alert" },
-];
 
 function MentionableIcon({ item }: { item: { type: string; title: string; image?: string } }) {
   return item.type === "page" ? (
@@ -105,11 +86,13 @@ export function ChatInput({ replyingTo, editingMsg, members = [], onCancelReply,
 
   const hasMentions = mentions.length > 0;
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (editingMsg) setInputValue(editingMsg.body ?? '');
     else setInputValue('');
     textareaRef.current?.focus();
   }, [editingMsg]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (replyingTo) textareaRef.current?.focus();

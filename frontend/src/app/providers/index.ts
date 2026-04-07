@@ -1,2 +1,4 @@
 // Public API for this slice.
-export * from './theme-provider';
+export { Providers } from './providers';
+export { QueryProvider, queryClient } from './query-provider';
+export { ThemeProvider, useTheme } from './theme-provider';

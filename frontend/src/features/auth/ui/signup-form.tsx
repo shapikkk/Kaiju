@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { authApi } from "@entities/user/api/auth"
-import { useAuth } from "@entities/user/model/useAuth"
+import { authApi, useAuth } from '@shared/lib/auth/useAuth'
 import { Button } from "@shared/ui/button"
 import {
   Card,
@@ -47,8 +46,9 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
       });
       await refreshUser();
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error registration. Check your data.');
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(msg ?? 'Error registration. Check your data.');
     } finally {
       setIsLoading(false);
     }

@@ -12,9 +12,9 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { useState } from 'react';
-import { KanbanColumn } from '@widgets/kanban/ui/kanban-column';
-import { TaskCard } from '@widgets/kanban/ui/task-card';
-import { useMoveTask } from '@shared/lib/api/useApi';
+import { KanbanColumn } from './kanban-column';
+import { TaskCard } from './task-card';
+import { useMoveTask } from '@entities/board';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import type { Board, Column, Task } from "@shared/types";

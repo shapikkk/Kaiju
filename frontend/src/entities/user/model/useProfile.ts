@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { profileApi } from '@entities/user/api/profile';
-import type { UpdateProfilePayload } from "@shared/types";
+import { profileApi } from '../api/profile';
+import type { UpdateProfilePayload } from '@shared/types';
 
 export const profileKeys = {
   all: ['profile'] as const,
@@ -17,8 +17,20 @@ export function useUserProfile(userId: number) {
   });
 }
 
-/** Update authenticated user's profile text/JSON fields. */
+/** Update authenticated user's name/email (basic fields). */
 export function useUpdateProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { name?: string; email?: string }) =>
+      profileApi.update(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['auth'] });
+    },
+  });
+}
+
+/** Update authenticated user's extended profile fields (bio, job_title, etc.). */
+export function useUpdateProfileDetails() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: UpdateProfilePayload) =>
@@ -27,6 +39,14 @@ export function useUpdateProfile() {
       qc.invalidateQueries({ queryKey: profileKeys.user(data.user.id) });
       qc.invalidateQueries({ queryKey: ['auth'] });
     },
+  });
+}
+
+/** Update authenticated user's password. */
+export function useUpdatePassword() {
+  return useMutation({
+    mutationFn: (payload: { current_password: string; password: string; password_confirmation: string }) =>
+      profileApi.updatePassword(payload),
   });
 }
 
@@ -50,6 +70,23 @@ export function useUploadBanner() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: profileKeys.user(data.user.id) });
       qc.invalidateQueries({ queryKey: ['auth'] });
+    },
+  });
+}
+
+/** Update notification preferences. */
+export function useUpdateNotificationPreferences() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (prefs: {
+      email?: boolean;
+      push?: boolean;
+      assigned?: boolean;
+      comments?: boolean;
+      due_date?: boolean;
+    }) => profileApi.updateNotificationPreferences(prefs),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['auth', 'me'] });
     },
   });
 }

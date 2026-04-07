@@ -16,8 +16,8 @@ import {
   useUpdateProfile,
   useUpdatePassword,
   useUploadAvatar,
-} from '@shared/lib/api/useApi';
-import { useAuth } from '@entities/user/model/useAuth';
+} from '../model/useProfile';
+import { useAuth } from '@shared/lib/auth/useAuth';
 import { toast } from 'sonner';
 import {
   Loader2,

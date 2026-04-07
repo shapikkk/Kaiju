@@ -1,7 +1,6 @@
 import { Minus, Square, X, ChevronLeft, ChevronRight, LogOut, User as UserIcon, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@entities/user/model/useAuth';
-import { authApi } from '@entities/user/api/auth';
+import { useAuth, authApi } from '@shared/lib/auth/useAuth';
 import { Button } from '@shared/ui/button';
 import { GlobalSearch } from '@features/search/ui/global-search';
 import {

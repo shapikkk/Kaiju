@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@shared/ui/select';
 import { Separator } from '@shared/ui/separator';
-import { useSendInvite, useGenerateInviteLink } from '@shared/lib/api/useApi';
+import { useSendInvite, useGenerateInviteLink } from '@entities/workspace';
 import { Loader2, CheckCircle2, AlertCircle, Plus, X, Link as LinkIcon, Copy, Check } from 'lucide-react';
 import type { Workspace } from "@shared/types";
 import type { AxiosError } from 'axios';
@@ -75,7 +75,7 @@ export function InviteMemberDialog({
     try {
       const { url } = await generateLink.mutateAsync();
       setGeneratedLink(url);
-    } catch (err) {
+    } catch {
       setErrorMsg('Failed to generate link');
     }
   };

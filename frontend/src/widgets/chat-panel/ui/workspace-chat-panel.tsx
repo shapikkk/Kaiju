@@ -1,35 +1,29 @@
-﻿import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@shared/ui/sheet';
-import { LightBox } from '@shared/ui/lightbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@shared/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
-import {
-  ContextMenu, ContextMenuContent, ContextMenuItem,
-  ContextMenuSeparator, ContextMenuTrigger,
-} from '@shared/ui/context-menu';
-import { ChatInput } from '@features/send-message/ui/chat-input';
+import { ChatInput } from '@features/send-message';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@shared/ui/dropdown-menu';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@entities/user/model/useAuth';
-import { useChannels, useChannelChat } from '@entities/channel/model/useChannelChat';
-import { useConversations, useDirectMessages } from '@entities/conversation/model/useDirectMessages';
-import apiClient from '@shared/lib/api/client';
-import { dmApi } from '@entities/conversation/api/dm';
-import {
-  Users, Reply, FileText,
-  ImageIcon, Pencil, Trash2, MessageSquarePlus, ArrowLeft,
-  Check, CheckCheck, Copy, Download
-} from 'lucide-react';
-import { UserMiniProfile } from '@entities/user/ui/user-mini-profile';
+import { useAuth } from '@shared/lib/auth/useAuth';
+import { useChannels, useChannelChat } from '@entities/channel';
+import { useConversations, useDirectMessages } from '@entities/conversation';
+import { useMarkRead } from '@entities/conversation';
+import { useWorkspaceMembers } from '@entities/workspace';
+import { MessageList } from '@widgets/message-list';
+import { scrollToMsg, getInitials, formatTime } from '@shared/lib/chat/formatters';
+import { Users, MessageSquarePlus, ArrowLeft } from 'lucide-react';
 import { Button } from '@shared/ui/button';
-import type { WorkspaceMessage, DirectMessage, Conversation, WorkspaceMember } from "@shared/types";
+import type { Conversation, WorkspaceMember } from '@shared/types';
+import type { ChatMsg } from '@features/send-message';
+
+// ─── Interfaces ───────────────────────────────────────────────────────────────
 
 interface Props {
   open: boolean;
@@ -37,378 +31,7 @@ interface Props {
   workspaceSlug: string | undefined;
 }
 
-type ChatMsg = WorkspaceMessage | DirectMessage;
-
-function formatTime(iso: string) {
-  return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
-}
-
-function formatDateLabel(iso: string): string {
-  const d = new Date(iso);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return 'Today';
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-function isSameDay(a: string, b: string) {
-  return new Date(a).toDateString() === new Date(b).toDateString();
-}
-
-function truncate(text: string, max = 60) {
-  return text.length > max ? text.slice(0, max) + '…' : text;
-}
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((w) => w[0] ?? '')
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
-function AttachmentRenderer({ url, name, type, isMine, onDelete, onImageLoad }: { url: string; name: string | null; type: 'image' | 'file'; isMine: boolean; onDelete?: () => void; onImageLoad?: () => void }) {
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  const handleLoad = () => {
-    setLoaded(true);
-    onImageLoad?.();
-  };
-
-  const handleDownload = () => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name ?? 'image';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  const handleCopyUrl = () => {
-    navigator.clipboard.writeText(url).catch(() => {});
-  };
-
-  if (type === 'image') {
-    return (
-      <>
-        <ContextMenu>
-          <ContextMenuTrigger asChild>
-            <button onClick={() => setLightboxOpen(true)} className="mt-1.5 block focus:outline-none">
-              <div className="relative overflow-hidden rounded-xl bg-muted" style={{ aspectRatio: '4/3', width: '240px', maxWidth: '100%' }}>
-                {!loaded && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
-                  </div>
-                )}
-                <img
-                  src={url}
-                  alt={name ?? 'image'}
-                  className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-                  loading="lazy"
-                  onLoad={handleLoad}
-                />
-              </div>
-            </button>
-          </ContextMenuTrigger>
-          <ContextMenuContent className="w-48">
-            <ContextMenuItem className="gap-2" onClick={handleCopyUrl}>
-              <Copy className="h-3.5 w-3.5" /> Copy Image URL
-            </ContextMenuItem>
-            <ContextMenuItem className="gap-2" onClick={handleDownload}>
-              <Download className="h-3.5 w-3.5" /> Download
-            </ContextMenuItem>
-            {isMine && onDelete && (
-              <>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                  className="gap-2 text-destructive focus:text-destructive"
-                  onClick={onDelete}
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
-                </ContextMenuItem>
-              </>
-            )}
-          </ContextMenuContent>
-        </ContextMenu>
-        <LightBox images={[url]} index={lightboxOpen ? 0 : null} onClose={() => setLightboxOpen(false)} />
-      </>
-    );
-  }
-
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-1.5 flex min-w-0 max-w-[220px] items-center gap-3 rounded-xl border bg-background px-3 py-2.5 shadow-sm transition-colors hover:bg-muted/60"
-    >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <FileText className="h-4 w-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[12px] font-medium leading-tight">{name ?? 'File'}</p>
-        <p className="text-[10px] text-muted-foreground">Open file</p>
-      </div>
-    </a>
-  );
-}
-
-function DateSeparator({ label }: { label: string }) {
-  return (
-    <div className="my-4 flex items-center gap-3">
-      <div className="h-px flex-1 bg-border" />
-      <span className="rounded-full border bg-muted/60 px-3 py-0.5 text-[10px] font-medium text-muted-foreground">
-        {label}
-      </span>
-      <div className="h-px flex-1 bg-border" />
-    </div>
-  );
-}
-
-interface BubbleProps {
-  msg: ChatMsg;
-  isMine: boolean;
-  isConsecutive: boolean;
-  onReply: (msg: ChatMsg) => void;
-  onEdit?: (msg: ChatMsg) => void;
-  onDelete?: (id: number) => void;
-  onScrollTo: (id: number) => void;
-  onImageLoad?: () => void;
-  idPrefix?: string;
-  otherUserLastReadAt?: string | null;
-}
-
-function MessageBubble({ msg, isMine, isConsecutive, onReply, onEdit, onDelete, onScrollTo, onImageLoad, idPrefix = 'msg', otherUserLastReadAt }: BubbleProps) {
-  const initials = getInitials(msg.user.name);
-  const hasText = !!msg.body;
-  const hasAttachment = !!msg.attachment_url;
-
-  let receiptIcon: React.ReactNode = null;
-  if (isMine && otherUserLastReadAt !== undefined) {
-    const isRead = otherUserLastReadAt
-      ? new Date(otherUserLastReadAt) >= new Date(msg.created_at)
-      : false;
-    receiptIcon = isRead
-      ? <CheckCheck className="h-3 w-3 text-primary" />
-      : <Check className="h-3 w-3 text-muted-foreground/60" />;
-  }
-
-  const BubbleMenu = ({ children }: { children: React.ReactNode }) => (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-44">
-        <ContextMenuItem className="gap-2" onClick={() => onReply(msg)}>
-          <Reply className="h-3.5 w-3.5" /> Reply
-        </ContextMenuItem>
-        {isMine && onEdit && onDelete && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem className="gap-2" onClick={() => onEdit(msg)}>
-              <Pencil className="h-3.5 w-3.5" /> Edit
-            </ContextMenuItem>
-            <ContextMenuItem
-              className="gap-2 text-destructive focus:text-destructive"
-              onClick={() => onDelete(msg.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Delete
-            </ContextMenuItem>
-          </>
-        )}
-      </ContextMenuContent>
-    </ContextMenu>
-  );
-
-  const avatarNode = (
-    <Avatar className="h-7 w-7 shrink-0 self-end cursor-pointer">
-      <AvatarImage src={msg.user.avatar_url ?? undefined} />
-      <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
-    </Avatar>
-  );
-
-  return (
-    <div
-      id={`${idPrefix}-${msg.id}`}
-      className={`flex w-full items-end gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'} ${
-        isConsecutive ? 'mt-1' : 'mt-4'
-      }`}
-    >
-      {!isConsecutive ? (
-        isMine ? avatarNode : (
-          <UserMiniProfile userId={msg.user.id} userName={msg.user.name} userAvatar={msg.user.avatar_url} side="right">
-            {avatarNode}
-          </UserMiniProfile>
-        )
-      ) : (
-        <div className="h-7 w-7 shrink-0" />
-      )}
-
-      <div className={`flex min-w-0 max-w-[85%] flex-col gap-0.5 ${isMine ? 'items-end' : 'items-start'}`}>
-        {!isConsecutive && (
-          <span className="px-1 text-[10px] text-muted-foreground">
-            {isMine ? 'You' : (
-              <UserMiniProfile userId={msg.user.id} userName={msg.user.name} userAvatar={msg.user.avatar_url} side="top">
-                <button className="hover:underline focus:outline-none">{msg.user.name}</button>
-              </UserMiniProfile>
-            )} · {formatTime(msg.created_at)}
-          </span>
-        )}
-
-        {msg.reply_to && (
-          <button
-            onClick={() => onScrollTo(msg.reply_to!.id)}
-            className={`mb-0.5 w-full cursor-pointer rounded-xl border-l-2 border-primary/50 bg-muted/40 px-3 py-1.5 text-left transition-colors hover:bg-muted ${
-              isMine ? 'rounded-br-none' : 'rounded-bl-none'
-            }`}
-          >
-            <p className="text-[10px] font-semibold text-primary">{msg.reply_to.user.name}</p>
-            <p className="truncate text-[11px] text-muted-foreground">{truncate(msg.reply_to.body ?? '', 80)}</p>
-          </button>
-        )}
-
-        {hasText && (
-          <BubbleMenu>
-            <div
-              className={`rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed shadow-sm whitespace-pre-wrap cursor-default select-text ${
-                isMine
-                  ? 'rounded-br-sm bg-primary text-primary-foreground'
-                  : 'rounded-bl-sm border bg-muted/50 text-foreground'
-              }`}
-            >
-              {msg.body}
-              {msg.is_edited && <span className="ml-1.5 text-[10px] opacity-60">(edited)</span>}
-            </div>
-          </BubbleMenu>
-        )}
-
-        {hasAttachment && (
-          <BubbleMenu>
-            <div className="min-w-0">
-              <AttachmentRenderer
-                url={msg.attachment_url!}
-                name={msg.attachment_name}
-                type={msg.attachment_type!}
-                isMine={isMine}
-                onDelete={onDelete ? () => onDelete(msg.id) : undefined}
-                onImageLoad={onImageLoad}
-              />
-            </div>
-          </BubbleMenu>
-        )}
-
-        {isMine && receiptIcon && (
-          <div className="flex items-center gap-0.5 pr-1 pt-0.5">
-            {receiptIcon}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface ChatMessageListProps {
-  messages: ChatMsg[];
-  currentUserId: number | undefined;
-  onReply: (msg: ChatMsg) => void;
-  onEdit?: (msg: ChatMsg) => void;
-  onDelete?: (id: number) => void;
-  onScrollTo: (id: number) => void;
-  idPrefix?: string;
-  emptyLabel?: string;
-  otherUserLastReadAt?: string | null;
-}
-
-function ChatMessageList({
-  messages, currentUserId, onReply, onEdit, onDelete, onScrollTo,
-  idPrefix = 'msg', emptyLabel = 'No messages yet', otherUserLastReadAt,
-}: ChatMessageListProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const prevLenRef = useRef(messages.length);
-
-  const handleImageLoad = useCallback(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    if (distFromBottom < 300) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, []);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const newLen = messages.length;
-    const didGrow = newLen > prevLenRef.current;
-    prevLenRef.current = newLen;
-    if (didGrow) {
-      const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-      if (distFromBottom < 300) {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  }, [messages.length]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'instant' });
-  }, [idPrefix]);
-
-  return (
-    <div
-      ref={scrollRef}
-      className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 py-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full"
-      onWheel={(e) => e.stopPropagation()}
-    >
-      {messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <ImageIcon className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <p className="text-sm font-medium">{emptyLabel}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Be the first to say something!</p>
-        </div>
-      ) : (
-        <div className="flex flex-col pb-2">
-          {messages.map((msg, index) => {
-            const isMine = msg.user.id === currentUserId;
-            const prevMsg = index > 0 ? messages[index - 1] : null;
-            const isConsecutive = !!prevMsg && prevMsg.user.id === msg.user.id && !msg.reply_to_id;
-            const showDateSep = !prevMsg || !isSameDay(msg.created_at, prevMsg.created_at);
-
-            return (
-              <div key={msg.id}>
-                {showDateSep && <DateSeparator label={formatDateLabel(msg.created_at)} />}
-                <MessageBubble
-                  msg={msg}
-                  isMine={isMine}
-                  isConsecutive={showDateSep ? false : isConsecutive}
-                  onReply={onReply}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onScrollTo={onScrollTo}
-                  onImageLoad={handleImageLoad}
-                  idPrefix={idPrefix}
-                  otherUserLastReadAt={otherUserLastReadAt}
-                />
-              </div>
-            );
-          })}
-          <div ref={bottomRef} className="h-[1px] shrink-0" />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function scrollToMsg(id: number, prefix = 'msg') {
-  const el = document.getElementById(`${prefix}-${id}`);
-  if (!el) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  el.classList.add('ring-2', 'ring-primary/40', 'rounded-2xl', 'transition-all');
-  setTimeout(() => el.classList.remove('ring-2', 'ring-primary/40', 'rounded-2xl', 'transition-all'), 1500);
-}
+// ─── Team Chat Tab ────────────────────────────────────────────────────────────
 
 function TeamChatTab({ workspaceSlug, open }: { workspaceSlug: string | undefined; open: boolean }) {
   const { user } = useAuth();
@@ -427,7 +50,7 @@ function TeamChatTab({ workspaceSlug, open }: { workspaceSlug: string | undefine
         <Users className="h-3.5 w-3.5" />
         <span>{onlineMembers.length} Online</span>
       </div>
-      <ChatMessageList
+      <MessageList
         messages={messages}
         currentUserId={user?.id}
         onReply={setReplyingTo}
@@ -435,6 +58,7 @@ function TeamChatTab({ workspaceSlug, open }: { workspaceSlug: string | undefine
         onDelete={deleteMessage}
         onScrollTo={(id) => scrollToMsg(id, 'msg')}
         idPrefix="msg"
+        emptyLabel="No messages yet"
       />
       <ChatInput
         replyingTo={replyingTo}
@@ -450,43 +74,80 @@ function TeamChatTab({ workspaceSlug, open }: { workspaceSlug: string | undefine
   );
 }
 
-function useWorkspaceMembers(workspaceSlug: string | undefined) {
-  return useQuery({
-    queryKey: ['members', workspaceSlug],
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: WorkspaceMember[] }>(`/workspaces/${workspaceSlug}/members`);
-      return res.data.data;
-    },
-    enabled: !!workspaceSlug,
-    staleTime: 60_000,
-  });
-}
+// ─── Active Conversation (DM view) ────────────────────────────────────────────
 
-function useMarkRead() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (convId: number) => dmApi.markRead(convId),
-    onSuccess: (_, convId) => {
-      qc.setQueriesData<Conversation[]>(
-        { queryKey: ['conversations'], exact: false },
-        (old) => old?.map((c) => c.id === convId ? { ...c, unread_count: 0 } : c) ?? old,
-      );
-    },
-  });
-}
-
-interface ConversationListProps {
-  conversations: Conversation[];
-  isLoading: boolean;
-  onSelect: (conv: Conversation) => void;
-  onNew: (userId: number) => Promise<{ id: number; other_user: Conversation['other_user'] }>;
-  isFindingOrCreating: boolean;
-  members: WorkspaceMember[];
-}
-
-function ConversationList({ conversations, isLoading, onSelect, onNew, isFindingOrCreating, members }: ConversationListProps) {
+function ActiveConversation({ conv, onBack }: { conv: Conversation; onBack: () => void }) {
   const { user } = useAuth();
+  const { messages, isSending, sendMessage, editMessage, deleteMessage } = useDirectMessages(conv.id);
+  const markRead = useMarkRead();
+  const [replyingTo, setReplyingTo] = useState<ChatMsg | null>(null);
+  const [editingMsg, setEditingMsg] = useState<ChatMsg | null>(null);
+
+  useEffect(() => {
+    markRead.mutate(conv.id);
+  }, [conv.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <>
+      <div className="flex shrink-0 items-center gap-2.5 border-b px-3 py-2.5">
+        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 rounded-lg" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <Avatar className="h-8 w-8 shrink-0">
+          <AvatarImage src={conv.other_user?.avatar_url ?? undefined} />
+          <AvatarFallback className="text-[10px]">{getInitials(conv.other_user?.name ?? '?')}</AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="text-sm font-semibold leading-none">{conv.local_name ?? conv.other_user?.name ?? 'Direct Message'}</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Direct message</p>
+        </div>
+      </div>
+
+      <MessageList
+        messages={messages}
+        currentUserId={user?.id}
+        onReply={setReplyingTo}
+        onEdit={(msg) => { setEditingMsg(msg); setReplyingTo(null); }}
+        onDelete={deleteMessage}
+        onScrollTo={(id) => scrollToMsg(id, `dm-${conv.id}`)}
+        idPrefix={`dm-${conv.id}`}
+        emptyLabel="No messages yet"
+        otherUserLastReadAt={conv.other_user_last_read_at}
+      />
+      <ChatInput
+        replyingTo={replyingTo}
+        editingMsg={editingMsg}
+        members={conv.other_user ? [conv.other_user as WorkspaceMember] : []}
+        onCancelReply={() => setReplyingTo(null)}
+        onCancelEdit={() => setEditingMsg(null)}
+        onSend={(body, replyToId, file) => sendMessage(body, replyToId, file)}
+        onEdit={(id, body) => editMessage(id, body)}
+        isSending={isSending}
+      />
+    </>
+  );
+}
+
+// ─── DM Tab ───────────────────────────────────────────────────────────────────
+
+function DMTab({ workspaceSlug }: { workspaceSlug: string | undefined }) {
+  const { user } = useAuth();
+  const { conversations, isLoading, findOrCreate, isFindingOrCreating } =
+    useConversations(workspaceSlug);
+  const [activeConv, setActiveConv] = useState<Conversation | null>(null);
+  const { data: members = [] } = useWorkspaceMembers(workspaceSlug);
   const otherMembers = useMemo(() => members.filter((m) => m.id !== user?.id), [members, user]);
+
+  useEffect(() => {
+    if (activeConv) {
+      const fresh = conversations.find((c) => c.id === activeConv.id);
+      if (fresh) setActiveConv(fresh);
+    }
+  }, [conversations, activeConv]);
+
+  if (activeConv) {
+    return <ActiveConversation conv={activeConv} onBack={() => setActiveConv(null)} />;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -512,9 +173,9 @@ function ConversationList({ conversations, isLoading, onSelect, onNew, isFinding
                 key={member.id}
                 className="gap-2.5"
                 onSelect={async () => {
-                  const conv = await onNew(member.id);
+                  const conv = await findOrCreate(member.id);
                   const existing = conversations.find((c) => c.id === conv.id);
-                  onSelect(existing ?? {
+                  setActiveConv(existing ?? {
                     id: conv.id,
                     other_user: conv.other_user,
                     other_user_last_read_at: null,
@@ -552,7 +213,7 @@ function ConversationList({ conversations, isLoading, onSelect, onNew, isFinding
             <button
               key={conv.id}
               className="flex w-full items-center justify-between space-x-4 rounded-md p-2 hover:bg-muted/50 transition-all text-left group"
-              onClick={() => onSelect(conv)}
+              onClick={() => setActiveConv(conv)}
             >
               <div className="flex items-center space-x-4 min-w-0">
                 <div className="relative shrink-0">
@@ -588,91 +249,14 @@ function ConversationList({ conversations, isLoading, onSelect, onNew, isFinding
   );
 }
 
-function ActiveConversation({
-  conv, onBack,
-}: { conv: Conversation; onBack: () => void }) {
-  const { user } = useAuth();
-  const { messages, isSending, sendMessage, editMessage, deleteMessage } = useDirectMessages(conv.id);
-  const markRead = useMarkRead();
-  const [replyingTo, setReplyingTo] = useState<ChatMsg | null>(null);
-  const [editingMsg, setEditingMsg] = useState<ChatMsg | null>(null);
-
-  useEffect(() => {
-    markRead.mutate(conv.id);
-  }, [conv.id]); 
-
-  return (
-    <>
-      <div className="flex shrink-0 items-center gap-2.5 border-b px-3 py-2.5">
-        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 rounded-lg" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <Avatar className="h-8 w-8 shrink-0">
-          <AvatarImage src={conv.other_user?.avatar_url ?? undefined} />
-          <AvatarFallback className="text-[10px]">{getInitials(conv.other_user?.name ?? '?')}</AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="text-sm font-semibold leading-none">{conv.local_name ?? conv.other_user?.name ?? 'Direct Message'}</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">Direct message</p>
-        </div>
-      </div>
-
-      <ChatMessageList
-        messages={messages}
-        currentUserId={user?.id}
-        onReply={setReplyingTo}
-        onEdit={(msg) => { setEditingMsg(msg); setReplyingTo(null); }}
-        onDelete={deleteMessage}
-        onScrollTo={(id) => scrollToMsg(id, `dm-${conv.id}`)}
-        idPrefix={`dm-${conv.id}`}
-        emptyLabel="No messages yet"
-        otherUserLastReadAt={conv.other_user_last_read_at}
-      />
-      <ChatInput
-        replyingTo={replyingTo}
-        editingMsg={editingMsg}
-        members={conv.other_user ? [conv.other_user as WorkspaceMember] : []}
-        onCancelReply={() => setReplyingTo(null)}
-        onCancelEdit={() => setEditingMsg(null)}
-        onSend={(body, replyToId, file) => sendMessage(body, replyToId, file)}
-        onEdit={(id, body) => editMessage(id, body)}
-        isSending={isSending}
-      />
-    </>
-  );
-}
-
-function DMTab({ workspaceSlug }: { workspaceSlug: string | undefined }) {
-  const { conversations, isLoading, findOrCreate, isFindingOrCreating } = useConversations(workspaceSlug);
-  const [activeConv, setActiveConv] = useState<Conversation | null>(null);
-  const { data: members = [] } = useWorkspaceMembers(workspaceSlug);
-
-  useEffect(() => {
-    if (activeConv) {
-      const fresh = conversations.find((c) => c.id === activeConv.id);
-      if (fresh) setActiveConv(fresh);
-    }
-  }, [conversations, activeConv]); 
-
-  if (activeConv) {
-    return <ActiveConversation conv={activeConv} onBack={() => setActiveConv(null)} />;
-  }
-
-  return (
-    <ConversationList
-      conversations={conversations}
-      isLoading={isLoading}
-      onSelect={setActiveConv}
-      onNew={findOrCreate}
-      isFindingOrCreating={isFindingOrCreating}
-      members={members}
-    />
-  );
-}
+// ─── WorkspaceChatPanel (public export) ──────────────────────────────────────
 
 export function WorkspaceChatPanel({ open, onOpenChange, workspaceSlug }: Props) {
   const { conversations } = useConversations(open ? workspaceSlug : undefined);
-  const totalUnread = useMemo(() => conversations.reduce((sum, c) => sum + c.unread_count, 0), [conversations]);
+  const totalUnread = useMemo(
+    () => conversations.reduce((sum, c) => sum + c.unread_count, 0),
+    [conversations],
+  );
   const [activeTab, setActiveTab] = useState<'team' | 'direct'>('team');
 
   return (
@@ -682,7 +266,11 @@ export function WorkspaceChatPanel({ open, onOpenChange, workspaceSlug }: Props)
           <SheetTitle className="text-sm font-semibold">Chat</SheetTitle>
         </SheetHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'team' | 'direct')} className="flex min-h-0 flex-1 flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'team' | 'direct')}
+          className="flex min-h-0 flex-1 flex-col"
+        >
           <div className="shrink-0 px-4 pt-3">
             <TabsList className="w-full">
               <TabsTrigger value="team" className="flex-1">Team</TabsTrigger>
@@ -712,5 +300,8 @@ export function WorkspaceChatPanel({ open, onOpenChange, workspaceSlug }: Props)
 
 export function useTotalUnreadDMs(workspaceSlug: string | undefined) {
   const { conversations } = useConversations(workspaceSlug);
-  return useMemo(() => conversations.reduce((sum, c) => sum + c.unread_count, 0), [conversations]);
+  return useMemo(
+    () => conversations.reduce((sum, c) => sum + c.unread_count, 0),
+    [conversations],
+  );
 }

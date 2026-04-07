@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@shared/ui/select';
-import { useCreateTask } from '@shared/lib/api/useApi';
+import { useCreateTask } from '@entities/board';
 import { PRIORITY_CONFIG } from "@shared/types";
 import type { Board, Priority, CreateTaskPayload, Sprint, User } from "@shared/types";
 import { Loader2 } from 'lucide-react';

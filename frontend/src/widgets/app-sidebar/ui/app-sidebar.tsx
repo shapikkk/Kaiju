@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '@entities/user/model/useAuth';
-import { useActiveWorkspace } from '@entities/channel/model/useActiveWorkspace';
+import { useAuth } from '@shared/lib/auth/useAuth';
+import { useActiveWorkspace } from '@entities/channel';
 import {
   Sidebar,
   SidebarContent,
@@ -16,11 +16,12 @@ import {
   SidebarMenuSkeleton,
   SidebarRail,
 } from '@shared/ui/sidebar';
-import { useWorkspaces, useBoards } from '@shared/lib/api/useApi';
-import { CreateBoardDialog } from '@features/create-board/ui/create-board-dialog';
-import { CreateWorkspaceDialog } from '@features/create-workspace/ui/create-workspace-dialog';
-import { InviteMemberDialog } from '@features/invite-member/ui/invite-member-dialog';
-import { WorkspaceSettingsDialog } from '@features/workspace-settings/ui/workspace-settings-dialog';
+import { useWorkspaces } from '@entities/workspace';
+import { useBoards } from '@entities/board';
+import { CreateBoardDialog } from '@features/create-board';
+import { CreateWorkspaceDialog } from '@features/create-workspace';
+import { InviteMemberDialog } from '@features/invite-member';
+import { WorkspaceSettingsDialog } from '@features/workspace-settings';
 import {
   LayoutDashboard,
   Plus,
@@ -40,8 +41,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@shared/ui/dropdown-menu';
-import { authApi } from '@entities/user/api/auth';
-import { useTotalUnreadDMs } from '@widgets/chat-panel/ui/workspace-chat-panel';
+import { authApi } from '@shared/lib/auth/useAuth';
+import { useTotalUnreadDMs } from '@widgets/chat-panel';
 
 export function AppSidebar() {
   const navigate = useNavigate();

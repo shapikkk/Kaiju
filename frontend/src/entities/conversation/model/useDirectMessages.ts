@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dmApi } from '@entities/conversation/api/dm';
-import { createEchoInstance } from '@shared/lib/websocket/echo';
-import { useAuth } from '@entities/user/model/useAuth';
+import { dmApi } from '../api/dm';
+import { subscribeConversation, unsubscribeConversation } from '@processes/realtime';
+import { useAuth } from '@shared/lib/auth/useAuth';
 import type { Conversation, DirectMessage } from "@shared/types";
 
 export function useConversations(workspaceSlug: string | undefined) {
@@ -49,6 +49,10 @@ export function useConversations(workspaceSlug: string | undefined) {
   };
 }
 
+/**
+ * DM messages hook — pure React Query consumer.
+ * WebSocket subscription is managed by the singleton realtimeManager.
+ */
 export function useDirectMessages(conversationId: number | null) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -63,59 +67,12 @@ export function useDirectMessages(conversationId: number | null) {
     gcTime: 10 * 60_000,
   });
 
+  // Subscribe to DM private channel via the singleton realtimeManager
   useEffect(() => {
     if (!conversationId || !user) return;
-
-    const echo = createEchoInstance();
-    const channel = echo.private(`conversation.${conversationId}`);
-
-    channel.listen('.dm.sent', (payload: DirectMessage) => {
-      queryClient.setQueryData<DirectMessage[]>(messagesQueryKey, (old) => {
-        if (!old) return [payload];
-        if (old.find((m) => m.id === payload.id)) return old;
-        return [...old, payload];
-      });
-
-      if (payload.user.id !== user.id) {
-        queryClient.setQueriesData<Conversation[]>(
-          { queryKey: ['conversations'], exact: false },
-          (old) =>
-            old?.map((c) =>
-              c.id === conversationId ? { ...c, unread_count: 0 } : c
-            ) ?? old
-        );
-        dmApi.markRead(conversationId)
-          .then(() => queryClient.invalidateQueries({ queryKey: ['conversations'] }))
-          .catch(() => queryClient.invalidateQueries({ queryKey: ['conversations'] }));
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      }
-    });
-
-    channel.listen('.conversation.read', (payload: {
-      conversation_id: number;
-      read_by_user_id: number;
-      read_at: string;
-    }) => {
-      if (payload.read_by_user_id === user.id) return;
-
-      queryClient.setQueriesData<Conversation[]>(
-        { queryKey: ['conversations'], exact: false },
-        (old) => old?.map((c) =>
-          c.id === payload.conversation_id
-            ? { ...c, other_user_last_read_at: payload.read_at }
-            : c
-        ) ?? old
-      );
-
-      queryClient.invalidateQueries({ queryKey: ['messages'] });
-    });
-
-    return () => {
-      echo.leave(`conversation.${conversationId}`);
-      echo.disconnect();
-    };
-  }, [conversationId, user]); // eslint-disable-line react-hooks/exhaustive-deps
+    subscribeConversation(conversationId, user.id, queryClient);
+    return () => { unsubscribeConversation(conversationId); };
+  }, [conversationId, user, queryClient]);
 
   const editMutation = useMutation({
     mutationFn: ({ id, body }: { id: number; body: string }) =>

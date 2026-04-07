@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@entities/user/model/useAuth';
+import { useAuth } from '@shared/lib/auth/useAuth';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@shared/ui/context-menu';
-import { dmApi, type ConversationAttachment } from '@entities/conversation/api/dm';
+import { dmApi, type ConversationAttachment } from '../api/dm';
 import type { Conversation } from "@shared/types";
 import { toast } from 'sonner';
 

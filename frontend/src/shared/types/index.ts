@@ -228,6 +228,8 @@ export interface WorkspaceMessage {
 
 
 
+export type ChatMsg = WorkspaceMessage | DirectMessage;
+
 export interface DirectMessage {
 
   id: number;

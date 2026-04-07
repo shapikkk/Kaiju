@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 import { Button } from '@shared/ui/button';
 import { Briefcase, MapPin, Mail, MessageCircle } from 'lucide-react';
-import { useUserProfile } from '@entities/user/model/useProfile';
+import { useUserProfile } from '../model/useProfile';
 
 function getInitials(name: string) {
   return name

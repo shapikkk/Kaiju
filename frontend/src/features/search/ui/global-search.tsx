@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useActiveWorkspace } from '@entities/channel/model/useActiveWorkspace';
-import { useWorkspaceSearch } from '@shared/lib/api/useApi';
+import { useActiveWorkspace } from '@entities/channel';
+import { useWorkspaceSearch } from '../model/useSearch';
 import { PRIORITY_CONFIG } from "@shared/types";
 import {
   Command,

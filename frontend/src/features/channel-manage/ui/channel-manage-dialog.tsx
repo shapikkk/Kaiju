@@ -23,11 +23,7 @@ export function CreateChannelDialog({ open, onOpenChange, onCreate, isCreating }
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!open) {
-      setName('');
-      setDescription('');
-      setError('');
-    }
+    if (!open) { setName(''); setDescription(''); setError(''); }
   }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,18 +108,21 @@ export function EditChannelDialog({
   isUpdating,
   isDeleting,
 }: EditChannelDialogProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState(channel?.name ?? '');
+  const [description, setDescription] = useState(channel?.description ?? '');
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Sync to the latest channel data whenever the channel prop changes
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (channel) {
+    if (open && channel) {
       setName(channel.name);
       setDescription(channel.description ?? '');
       setError('');
     }
-  }, [channel]);
+  }, [open, channel]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

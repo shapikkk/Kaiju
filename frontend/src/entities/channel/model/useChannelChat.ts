@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { chatApi } from '@entities/channel/api/chat';
-import { createEchoInstance } from '@shared/lib/websocket/echo';
-import { useAuth } from '@entities/user/model/useAuth';
+import { chatApi } from '../api/chat';
+import { useQueryClient as useQC } from '@tanstack/react-query';
+import { subscribeChannel, unsubscribeChannel } from '@processes/realtime';
+import { useEffect } from 'react';
+import { useAuth } from '@shared/lib/auth/useAuth';
 import type { Channel, CreateChannelPayload, UpdateChannelPayload, WorkspaceMessage } from "@shared/types";
 
 export interface OnlineMember {
@@ -66,11 +67,13 @@ export function useChannelManagement(workspaceSlug: string | undefined) {
   };
 }
 
-/** Real-time channel chat hook. Subscribes to `channel.{channelId}` presence channel. */
+/**
+ * Channel chat hook — pure React Query consumer.
+ * WebSocket subscription is managed by the singleton realtimeManager.
+ */
 export function useChannelChat(channelId: number | undefined) {
-  const queryClient = useQueryClient();
+  const queryClient = useQC();
   const { user } = useAuth();
-  const [onlineMembers, setOnlineMembers] = useState<OnlineMember[]>([]);
 
   const queryKey = ['channel-messages', channelId];
 
@@ -82,45 +85,20 @@ export function useChannelChat(channelId: number | undefined) {
     gcTime: 10 * 60_000,
   });
 
+  // Subscribe to channel presence via the singleton realtimeManager
   useEffect(() => {
     if (!channelId || !user) return;
+    subscribeChannel(channelId, queryClient);
+    return () => { unsubscribeChannel(channelId); };
+  }, [channelId, user, queryClient]);
 
-    const echo = createEchoInstance();
-    const ch = echo.join(`channel.${channelId}`);
-
-    ch
-      .here((members: OnlineMember[]) => setOnlineMembers(members))
-      .joining((member: OnlineMember) => {
-        setOnlineMembers((prev) =>
-          prev.find((m) => m.id === member.id) ? prev : [...prev, member]
-        );
-      })
-      .leaving((member: OnlineMember) => {
-        setOnlineMembers((prev) => prev.filter((m) => m.id !== member.id));
-      })
-      .listen('.message.sent', (payload: WorkspaceMessage) => {
-        queryClient.setQueryData<WorkspaceMessage[]>(queryKey, (old) => {
-          if (!old) return [payload];
-          if (old.find((m) => m.id === payload.id)) return old;
-          return [...old, payload];
-        });
-      })
-      .listen('.message.updated', (payload: WorkspaceMessage) => {
-        queryClient.setQueryData<WorkspaceMessage[]>(queryKey, (old) =>
-          old ? old.map((m) => (m.id === payload.id ? payload : m)) : [payload]
-        );
-      })
-      .listen('.message.deleted', (payload: { id: number }) => {
-        queryClient.setQueryData<WorkspaceMessage[]>(queryKey, (old) =>
-          old ? old.filter((m) => m.id !== payload.id) : []
-        );
-      });
-
-    return () => {
-      echo.leave(`channel.${channelId}`);
-      echo.disconnect();
-    };
-  }, [channelId, user]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Online members are seeded by the widget-layer WebSocket subscription
+  const { data: onlineMembers = [] } = useQuery<OnlineMember[]>({
+    queryKey: ['channel-online', channelId],
+    queryFn: () => [],          // seeded by WebSocket; no HTTP fetch needed
+    enabled: !!channelId,
+    staleTime: Infinity,
+  });
 
   const sendMutation = useMutation({
     mutationFn: ({
