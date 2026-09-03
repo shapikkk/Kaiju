@@ -22,6 +22,7 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
   const { data: board, isLoading } = useBoard(workspaceSlug, boardSlug);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(initialTaskId);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createInColumnId, setCreateInColumnId] = useState<number | null>(null);
   const [sprintDialogOpen, setSprintDialogOpen] = useState(false);
   const [epicDialogOpen, setEpicDialogOpen] = useState(false);
   const [newSprintName, setNewSprintName] = useState('');
@@ -50,6 +51,32 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
 
   const handleCloseTask = useCallback(() => setSelectedTaskId(null), []);
 
+  const handleAddTask = useCallback((columnId: number) => {
+    setCreateInColumnId(columnId);
+    setCreateDialogOpen(true);
+  }, []);
+
+  const handleNewTask = useCallback(() => {
+    setCreateInColumnId(null);
+    setCreateDialogOpen(true);
+  }, []);
+
+  /** Total tasks and the share sitting in a "done" column, in one pass. */
+  const { taskTotal, donePct } = useMemo(() => {
+    const columns = board?.columns ?? [];
+    let total = 0;
+    let done = 0;
+    for (const col of columns) {
+      const n = col.tasks?.length ?? 0;
+      total += n;
+      if (col.is_done_column) done += n;
+    }
+    return {
+      taskTotal: total,
+      donePct: total === 0 ? 0 : Math.round((done / total) * 100),
+    };
+  }, [board?.columns]);
+
   const handleCreateSprint = useCallback(() => {
     if (!newSprintName.trim()) return;
     createSprint.mutate(
@@ -69,10 +96,36 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       {board && (
-        <div className="relative z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background px-6">
-          <div className="flex items-center gap-3">
-            {board.color && <div className="h-4 w-4 rounded" style={{ backgroundColor: board.color }} />}
-            <h1 className="text-lg font-bold text-foreground">{board.name}</h1>
+        <div className="kj-fade relative z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
+          <div className="flex min-w-0 items-center gap-3">
+            {board.color && (
+              <span
+                className="h-5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: board.color }}
+                aria-hidden
+              />
+            )}
+            <h1 className="truncate text-[15px] font-semibold tracking-tight text-foreground">
+              {board.name}
+            </h1>
+
+            {taskTotal > 0 && (
+              <div className="flex items-center gap-2 border-l pl-3 text-[11px] text-muted-foreground">
+                <span className="tabular-nums">
+                  {taskTotal} {taskTotal === 1 ? 'task' : 'tasks'}
+                </span>
+                <span
+                  className="relative h-1.5 w-16 overflow-hidden rounded-full bg-muted"
+                  title={`${donePct}% done`}
+                >
+                  <span
+                    className="absolute inset-y-0 left-0 rounded-full bg-emerald-500 transition-[width] duration-500 ease-out"
+                    style={{ width: `${donePct}%` }}
+                  />
+                </span>
+                <span className="tabular-nums font-medium">{donePct}%</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setSprintDialogOpen(true)}>
@@ -81,14 +134,19 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
             <Button variant="outline" size="sm" onClick={() => setEpicDialogOpen(true)}>
               <Zap className="mr-1.5 h-3.5 w-3.5" /> Epic
             </Button>
-            <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+            <Button size="sm" onClick={handleNewTask}>
               <Plus className="mr-1.5 h-4 w-4" /> New Task
             </Button>
           </div>
         </div>
       )}
 
-      <KanbanBoard board={board} isLoading={isLoading} onTaskClick={handleTaskClick} />
+      <KanbanBoard
+        board={board}
+        isLoading={isLoading}
+        onTaskClick={handleTaskClick}
+        onAddTask={handleAddTask}
+      />
 
       {selectedTaskId && (
         <TaskDetailPanel
@@ -106,6 +164,7 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
           boardSlug={boardSlug}
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
+          defaultColumnId={createInColumnId}
         />
       )}
 

@@ -80,6 +80,7 @@ export function ChannelChatPane({ channel, workspaceSlug }: ChannelChatPaneProps
         onEdit={setEditingMsg}
         onDelete={deleteMessage}
         onScrollTo={handleScrollTo}
+        variant="channel"
         idPrefix={`ch-${channel.id}`}
         emptyLabel={`No messages in #${channel.name} yet`}
         renderAvatar={renderAvatar}
@@ -96,6 +97,7 @@ export function ChannelChatPane({ channel, workspaceSlug }: ChannelChatPaneProps
             onSend={handleSend}
             onEdit={handleEdit}
             isSending={isSending}
+            placeholder={`Message #${channel.name}`}
           />
         </div>
       </div>

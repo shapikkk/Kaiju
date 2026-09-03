@@ -30,6 +30,8 @@ interface CreateTaskDialogProps {
   boardSlug: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Preselects a column when opened from that column's "+" button. */
+  defaultColumnId?: number | null;
 }
 
 const PRIORITIES: Priority[] = ['lowest', 'low', 'medium', 'high', 'highest'];
@@ -40,6 +42,7 @@ export function CreateTaskDialog({
   boardSlug,
   open,
   onOpenChange,
+  defaultColumnId = null,
 }: CreateTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -73,9 +76,11 @@ export function CreateTaskDialog({
     return Array.from(map.values());
   }, [columns]);
 
+  // Derived rather than synced into state: an explicit pick wins, otherwise
+  // the column whose "+" opened the dialog, otherwise the first column.
   const effectiveColumnId = columnId
     ? Number(columnId)
-    : columns[0]?.id ?? 0;
+    : defaultColumnId ?? columns[0]?.id ?? 0;
 
   const resetForm = () => {
     setTitle('');
@@ -112,7 +117,13 @@ export function CreateTaskDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setColumnId('');
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="sm:max-w-xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -155,7 +166,7 @@ export function CreateTaskDialog({
               <div className="space-y-1.5">
                 <Label>Column</Label>
                 <Select
-                  value={columnId || String(columns[0]?.id ?? '')}
+                  value={String(effectiveColumnId)}
                   onValueChange={setColumnId}
                 >
                   <SelectTrigger className="w-full">

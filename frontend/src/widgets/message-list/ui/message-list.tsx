@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect } from 'react';
-import { ImageIcon } from 'lucide-react';
+import { MessagesSquare } from 'lucide-react';
 import { MessageBubble } from '@entities/message/ui/message-bubble';
 import { DateSeparator } from '@shared/ui/date-separator';
 import { formatDateLabel, isSameDay } from '@shared/lib/chat/formatters';
@@ -14,6 +14,8 @@ interface MessageListProps {
   onScrollTo: (id: number) => void;
   idPrefix?: string;
   emptyLabel?: string;
+  /** 'channel' renders a left-aligned roster; 'dm' renders two-sided bubbles. */
+  variant?: 'channel' | 'dm';
   otherUserLastReadAt?: string | null;
   renderAvatar?: (
     userId: number,
@@ -27,7 +29,7 @@ interface MessageListProps {
 export function MessageList({
   messages, currentUserId, onReply, onEdit, onDelete, onScrollTo,
   idPrefix = 'chat', emptyLabel = 'No messages yet', otherUserLastReadAt,
-  renderAvatar,
+  renderAvatar, variant = 'dm',
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -67,28 +69,41 @@ export function MessageList({
   return (
     <div
       ref={scrollRef}
-      className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-6 pt-4 pb-[180px]"
+      /* The ambient particle field is a nice touch, but reading a dense
+         message log through it is genuinely hard — damp it here only. */
+      className="kj-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-background/85 px-4 pt-4 pb-[150px]"
     >
       {messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+        <div className="kj-rise flex flex-1 flex-col items-center justify-center py-20 text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-inset ring-primary/20">
+            <MessagesSquare className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-sm font-semibold">{emptyLabel}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Be the first to send a message!</p>
+          <p className="text-sm font-semibold text-foreground">{emptyLabel}</p>
+          <p className="mt-1 max-w-[22rem] text-xs text-muted-foreground">
+            Messages sent here are visible to everyone with access. Say hello to get things started.
+          </p>
         </div>
       ) : (
         <div className="flex flex-col">
           {messages.map((msg, index) => {
             const isMine = msg.user.id === currentUserId;
             const prevMsg = index > 0 ? messages[index - 1] : null;
-            const isConsecutive = !!prevMsg && prevMsg.user.id === msg.user.id && !msg.reply_to_id;
+            const withinGroupWindow =
+              !!prevMsg &&
+              new Date(msg.created_at).getTime() -
+                new Date(prevMsg.created_at).getTime() < 5 * 60_000;
+            const isConsecutive =
+              !!prevMsg &&
+              prevMsg.user.id === msg.user.id &&
+              withinGroupWindow &&
+              !msg.reply_to_id;
             const showDateSep = !prevMsg || !isSameDay(msg.created_at, prevMsg.created_at);
             return (
               <div key={msg.id}>
                 {showDateSep && <DateSeparator label={formatDateLabel(msg.created_at)} />}
                 <MessageBubble
                   msg={msg}
+                  variant={variant}
                   isMine={isMine}
                   isConsecutive={showDateSep ? false : isConsecutive}
                   onReply={onReply}

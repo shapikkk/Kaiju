@@ -585,3 +585,107 @@
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
+/* ── Motion system ──────────────────────────────────────────────────
+   One shared vocabulary of easings, durations and keyframes so every
+   surface animates the same way. Anything that moves should use these
+   rather than inventing its own curve.
+   ─────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Decelerating curve for things entering or settling. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Slight overshoot, for elements that should feel physical. */
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-panel: 380ms;
+}
+
+@keyframes kj-rise {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kj-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes kj-panel-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kj-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+/* Chat messages grow from the side they belong to. */
+@keyframes kj-msg-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kj-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+/* Breathing ring used by the live/presence dot. */
+@keyframes kj-ping-soft {
+  0%   { transform: scale(1);   opacity: 0.55; }
+  70%  { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.kj-rise    { animation: kj-rise var(--dur-slow) var(--ease-out-expo) both; }
+.kj-fade    { animation: kj-fade var(--dur-base) var(--ease-soft) both; }
+.kj-panel   { animation: kj-panel-in var(--dur-panel) var(--ease-out-expo) both; }
+.kj-scrim   { animation: kj-scrim-in var(--dur-base) var(--ease-soft) both; }
+.kj-msg     { animation: kj-msg-in var(--dur-base) var(--ease-out-expo) both; }
+
+/* Index-driven stagger: set style={{ '--i': n }} on the child. */
+.kj-stagger { animation-delay: calc(var(--i, 0) * 40ms); }
+
+.kj-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    color-mix(in oklch, var(--muted) 60%, var(--foreground) 8%) 37%,
+    var(--muted) 63%
+  );
+  background-size: 200% 100%;
+  animation: kj-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Interactive lift shared by cards and list rows. */
+.kj-lift {
+  transition:
+    transform var(--dur-base) var(--ease-out-expo),
+    box-shadow var(--dur-base) var(--ease-out-expo),
+    border-color var(--dur-base) var(--ease-soft),
+    background-color var(--dur-base) var(--ease-soft);
+  will-change: transform;
+}
+.kj-lift:hover { transform: translateY(-2px); }
+.kj-lift:active { transform: translateY(0) scale(0.995); }
+
+/* Thin, unobtrusive scrollbars for dense panes. */
+.kj-scroll { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.kj-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.kj-scroll::-webkit-scrollbar-track { background: transparent; }
+.kj-scroll::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklch, var(--foreground) 14%, transparent);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+.kj-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklch, var(--foreground) 26%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kj-rise, .kj-fade, .kj-panel, .kj-scrim, .kj-msg, .kj-shimmer {
+    animation: none !important;
+  }
+  .kj-lift { transition: none; }
+  .kj-lift:hover, .kj-lift:active { transform: none; }
+}
