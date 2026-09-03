@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { FileText, ImageOff, Copy, Download, Trash2 } from 'lucide-react';
 import { LightBox } from '@shared/ui/lightbox';
@@ -25,11 +25,33 @@ export function AttachmentRenderer({ url, name, type, isMine, onDelete, onImageL
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  /** True when the image was already decoded before we mounted (cache hit). */
+  const [instant, setInstant] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const handleLoad = () => {
     setLoaded(true);
     onImageLoad?.();
   };
+
+  /*
+   * A cached image can finish decoding before React attaches onLoad, in which
+   * case that event never fires and the image stays at opacity 0 — visible as
+   * an empty grey box. Catch the already-complete case on mount.
+   */
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el || !el.complete) return;
+    if (el.naturalWidth > 0) {
+      // Show it outright: there is nothing to wait for, and relying on a
+      // transition to reveal it means a throttled tab can leave it invisible.
+      setInstant(true);
+      handleLoad();
+    } else {
+      setFailed(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDownload = () => {
     const a = document.createElement('a');
@@ -57,25 +79,29 @@ export function AttachmentRenderer({ url, name, type, isMine, onDelete, onImageL
               disabled={failed}
             >
               <div className="relative w-[260px] max-w-full overflow-hidden rounded-xl bg-muted ring-1 ring-border/50">
-                {/* Skeleton only until the first paint; a failure swaps in a
-                    real message instead of leaving a dead grey rectangle. */}
-                {!loaded && !failed && (
-                  <div className="kj-shimmer aspect-[4/3] w-full" />
-                )}
-                {failed && (
+                {failed ? (
                   <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-1.5 text-muted-foreground/60">
                     <ImageOff className="h-5 w-5" />
                     <span className="text-[10px]">Image unavailable</span>
                   </div>
+                ) : (
+                  <>
+                    <img
+                      ref={imgRef}
+                      src={url}
+                      alt={name ?? 'image'}
+                      className={`block max-h-[320px] w-full object-cover group-hover/img:brightness-105 ${instant ? '' : 'transition-opacity duration-300'} ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                      loading="lazy"
+                      onLoad={handleLoad}
+                      onError={() => setFailed(true)}
+                    />
+                    {/* Overlaid rather than swapped in, so the image keeps its
+                        place in the layout and nothing shifts when it appears. */}
+                    {!loaded && (
+                      <div className="kj-shimmer absolute inset-0 aspect-[4/3] w-full" />
+                    )}
+                  </>
                 )}
-                <img
-                  src={url}
-                  alt={name ?? 'image'}
-                  className={`block max-h-[320px] w-full object-cover transition-all duration-300 group-hover/img:brightness-105 ${loaded && !failed ? 'opacity-100' : 'absolute inset-0 h-0 opacity-0'}`}
-                  loading="lazy"
-                  onLoad={handleLoad}
-                  onError={() => setFailed(true)}
-                />
               </div>
             </button>
           </ContextMenuTrigger>
