@@ -383,7 +383,7 @@ function WorkspaceTab() {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={() => deleteWorkspace.mutate(workspace.id)} disabled={deleteWorkspace.isPending}>
+            <Button variant="destructive" onClick={() => deleteWorkspace.mutate(workspace.slug)} disabled={deleteWorkspace.isPending}>
               {deleteWorkspace.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Delete
             </Button>
           </DialogFooter>

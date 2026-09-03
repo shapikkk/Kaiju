@@ -37,6 +37,9 @@ final class CreateTaskAction
                 $task->tags()->sync($dto->tagIds);
             }
 
+            // TaskResource's key_identifier accessor reads $task->board.
+            $task->setRelation('board', $board);
+
             return $task->load(['creator', 'assignee', 'tags', 'column']);
         });
     }

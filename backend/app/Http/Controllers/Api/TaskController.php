@@ -41,6 +41,7 @@ class TaskController extends Controller
     {
         $dto = CreateTaskDTO::fromRequest($request, $board->id, $request->user()->id);
         $task = $action->execute($dto);
+        $task->setRelation('board', $board);
 
         return (new TaskResource($task))
             ->response()
@@ -50,6 +51,7 @@ class TaskController extends Controller
     public function show(Task $task): TaskResource
     {
         $task->load([
+            'board',
             'creator',
             'assignee',
             'tags',
@@ -72,7 +74,7 @@ class TaskController extends Controller
         $dto = UpdateTaskDTO::fromRequest($request);
         $task = $action->execute($task, $dto);
 
-        $task->load(['epic', 'sprint', 'assignee', 'tags', 'column']);
+        $task->load(['board', 'epic', 'sprint', 'assignee', 'tags', 'column']);
 
         return new TaskResource($task);
     }

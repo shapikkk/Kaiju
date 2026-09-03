@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@shared/ui/button';
 import { ChatInput } from '@features/send-message';
@@ -28,6 +29,51 @@ export function DMChatPane({ conv, onBack }: DMChatPaneProps) {
     resetDraft();
   }, [conv.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Stable identities: MessageList and MessageBubble are memoised.
+  const handleScrollTo = useCallback(
+    (id: number) => scrollToMsg(id, `dm-${conv.id}`),
+    [conv.id],
+  );
+
+  const renderAvatar = useCallback(
+    (
+      userId: number,
+      userName: string,
+      userAvatar: string | null,
+      children: ReactNode,
+      placement: 'avatar' | 'name',
+    ) => (
+      <UserMiniProfile
+        userId={userId}
+        userName={userName}
+        userAvatar={userAvatar}
+        side={placement === 'avatar' ? 'right' : 'top'}
+      >
+        {children}
+      </UserMiniProfile>
+    ),
+    [],
+  );
+
+  const inputMembers = useMemo(
+    () => (conv.other_user ? [conv.other_user as WorkspaceMember] : []),
+    [conv.other_user],
+  );
+
+  const handleCancelReply = useCallback(() => setReplyingTo(null), [setReplyingTo]);
+  const handleCancelEdit = useCallback(() => setEditingMsg(null), [setEditingMsg]);
+
+  const handleSend = useCallback(
+    (body: string, replyToId: number | null, file: File | null) =>
+      sendMessage(body, replyToId, file),
+    [sendMessage],
+  );
+
+  const handleEdit = useCallback(
+    (id: number, body: string) => editMessage(id, body),
+    [editMessage],
+  );
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-center gap-2 border-b bg-muted/20 px-6 py-2 md:hidden">
@@ -43,20 +89,11 @@ export function DMChatPane({ conv, onBack }: DMChatPaneProps) {
         onReply={setReplyingTo}
         onEdit={setEditingMsg}
         onDelete={deleteMessage}
-        onScrollTo={(id) => scrollToMsg(id, `dm-${conv.id}`)}
+        onScrollTo={handleScrollTo}
         idPrefix={`dm-${conv.id}`}
         emptyLabel="Start a conversation"
         otherUserLastReadAt={conv.other_user_last_read_at}
-        renderAvatar={(userId, userName, userAvatar, children, placement) => (
-          <UserMiniProfile
-            userId={userId}
-            userName={userName}
-            userAvatar={userAvatar}
-            side={placement === 'avatar' ? 'right' : 'top'}
-          >
-            {children}
-          </UserMiniProfile>
-        )}
+        renderAvatar={renderAvatar}
       />
 
       <div className="absolute bottom-0 left-0 w-full z-10 pointer-events-none px-4 pb-6 pt-2">
@@ -64,11 +101,11 @@ export function DMChatPane({ conv, onBack }: DMChatPaneProps) {
           <ChatInput
             replyingTo={replyingTo}
             editingMsg={editingMsg}
-            members={conv.other_user ? [conv.other_user as WorkspaceMember] : []}
-            onCancelReply={() => setReplyingTo(null)}
-            onCancelEdit={() => setEditingMsg(null)}
-            onSend={(body, replyToId, file) => sendMessage(body, replyToId, file)}
-            onEdit={(id, body) => editMessage(id, body)}
+            members={inputMembers}
+            onCancelReply={handleCancelReply}
+            onCancelEdit={handleCancelEdit}
+            onSend={handleSend}
+            onEdit={handleEdit}
             isSending={isSending}
           />
         </div>

@@ -19,52 +19,44 @@ class DirectMessageController extends Controller
             abort(403);
         }
 
+        $userId = $request->user()->id;
+
         $conversations = Conversation::where('workspace_id', $workspace->id)
-            ->whereHas('participants', fn($q) => $q->where('users.id', $request->user()->id))
+            ->whereHas('participants', fn($q) => $q->where('users.id', $userId))
             ->with([
                 'participants:id,name,email,avatar_url',
                 'latestMessage.user:id,name,avatar_url',
             ])
             ->orderByDesc('updated_at')
-            ->get()
-            ->map(function (Conversation $conv) use ($request) {
-                $other = $conv->participants->firstWhere('id', '!=', $request->user()->id);
-                $lastMsg = $conv->latestMessage->first();
+            ->get();
 
-                $pivot = $conv->participants->firstWhere('id', $request->user()->id)?->pivot;
-                $unread = 0;
-                if ($pivot) {
-                    $unread = $conv->messages()
-                        ->where('user_id', '!=', $request->user()->id)
-                        ->when($pivot->last_read_at, fn($q, $d) => $q->where('created_at', '>', $d))
-                        ->count();
-                }
+        $unreadCounts = $this->unreadCountsFor($conversations, $userId);
 
-                $otherPivot = $other ? $conv->participants->firstWhere('id', $other->id)?->pivot : null;
+        $data = $conversations->map(function (Conversation $conv) use ($userId, $unreadCounts) {
+            $me    = $conv->participants->firstWhere('id', $userId);
+            $other = $conv->participants->firstWhere('id', '!=', $userId);
 
-                $myPivot = $conv->participants->firstWhere('id', $request->user()->id)?->pivot;
-                $localName = $myPivot?->local_name ?? null;
-                $localNote = $myPivot?->local_note ?? null;
+            return [
+                'id'                      => $conv->id,
+                'other_user'              => $other ? [
+                    'id'         => $other->id,
+                    'name'       => $other->name,
+                    'email'      => $other->email,
+                    'avatar_url' => $other->avatar_url ? url($other->avatar_url) : null,
+                ] : null,
+                'other_user_last_read_at' => $other?->pivot?->last_read_at
+                    ? \Carbon\Carbon::parse($other->pivot->last_read_at)->toISOString()
+                    : null,
+                'last_message'            => $conv->latestMessage
+                    ? self::serializeMessage($conv->latestMessage)
+                    : null,
+                'unread_count'            => (int) $unreadCounts->get($conv->id, 0),
+                'local_name'              => $me?->pivot?->local_name,
+                'local_note'              => $me?->pivot?->local_note,
+            ];
+        });
 
-                return [
-                    'id'                      => $conv->id,
-                    'other_user'              => $other ? [
-                        'id'         => $other->id,
-                        'name'       => $other->name,
-                        'email'      => $other->email,
-                        'avatar_url' => $other->avatar_url ? url($other->avatar_url) : null,
-                    ] : null,
-                    'other_user_last_read_at' => $otherPivot?->last_read_at
-                        ? \Carbon\Carbon::parse($otherPivot->last_read_at)->toISOString()
-                        : null,
-                    'last_message'            => $lastMsg ? self::serializeMessage($lastMsg) : null,
-                    'unread_count'            => $unread,
-                    'local_name'              => $localName,
-                    'local_note'              => $localNote,
-                ];
-            });
-
-        return response()->json(['data' => $conversations]);
+        return response()->json(['data' => $data]);
     }
 
     public function findOrCreate(Request $request, Workspace $workspace): JsonResponse
@@ -213,7 +205,7 @@ class DirectMessageController extends Controller
             $query->where('attachment_type', $type);
         }
 
-        $messages = $query->get();
+        $messages = $query->limit(200)->get();
 
         return response()->json([
             'data' => $messages->map(fn(DirectMessage $m) => [
@@ -266,6 +258,48 @@ class DirectMessageController extends Controller
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Unread counts for a whole set of conversations in one query.
+     *
+     * Each conversation carries its own `last_read_at` cutoff, so a plain
+     * GROUP BY will not do; the cutoffs are folded into one OR-of-ANDs.
+     *
+     * @param  \Illuminate\Support\Collection<int, Conversation>  $conversations
+     * @return \Illuminate\Support\Collection<int, int>  keyed by conversation id
+     */
+    private function unreadCountsFor($conversations, int $userId)
+    {
+        $cutoffs = [];
+
+        foreach ($conversations as $conv) {
+            $me = $conv->participants->firstWhere('id', $userId);
+            if ($me) {
+                $cutoffs[$conv->id] = $me->pivot?->last_read_at;
+            }
+        }
+
+        if (empty($cutoffs)) {
+            return collect();
+        }
+
+        return DirectMessage::query()
+            ->whereIn('conversation_id', array_keys($cutoffs))
+            ->where('user_id', '!=', $userId)
+            ->where(function ($query) use ($cutoffs) {
+                foreach ($cutoffs as $conversationId => $lastReadAt) {
+                    $query->orWhere(function ($inner) use ($conversationId, $lastReadAt) {
+                        $inner->where('conversation_id', $conversationId);
+                        if ($lastReadAt) {
+                            $inner->where('created_at', '>', $lastReadAt);
+                        }
+                    });
+                }
+            })
+            ->groupBy('conversation_id')
+            ->selectRaw('conversation_id, COUNT(*) as aggregate')
+            ->pluck('aggregate', 'conversation_id');
     }
 
     private function authorizeConversation(Request $request, Conversation $conversation): void
