@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\DirectMessageSent;
+use App\Events\NewDirectMessageNotification;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\DirectMessage;
@@ -167,6 +168,16 @@ class DirectMessageController extends Controller
         $conversation->touch();
 
         broadcast(new DirectMessageSent($message));
+
+        // The conversation channel only reaches people currently viewing the
+        // thread. Ping the other participants on their own private channel so
+        // their sidebar updates too; the event carries no message content.
+        $conversation->participants()
+            ->where('users.id', '!=', $request->user()->id)
+            ->pluck('users.id')
+            ->each(fn (int $recipientId) => broadcast(
+                new NewDirectMessageNotification($recipientId),
+            ));
 
         return response()->json(['data' => self::serializeMessage($message)], 201);
     }

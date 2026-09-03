@@ -74,3 +74,13 @@ Broadcast::channel('conversation.{id}', function ($user, int $id) {
 
     return $conversation->participants()->where('users.id', $user->id)->exists();
 });
+
+/**
+ * Private per-user notification channel.
+ *
+ * Carries contentless pings (e.g. "a DM arrived") so a client can refresh
+ * without the payload ever touching a shared channel. Only the owner listens.
+ */
+Broadcast::channel('user.{id}', function ($user, int $id) {
+    return (int) $user->id === $id;
+});

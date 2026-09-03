@@ -76,6 +76,35 @@ class WorkspaceMemberController extends Controller
     }
 
     /**
+     * Leave the workspace yourself.
+     *
+     * Distinct from destroy(), which is an admin removing somebody else. The
+     * owner cannot leave — there would be nobody left to administer the
+     * workspace — so they are told to hand it over or delete it instead.
+     */
+    public function leave(Request $request, Workspace $workspace): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($workspace->owner_id === $user->id) {
+            return response()->json([
+                'message' => 'You own this workspace. Transfer ownership or delete it instead of leaving.',
+            ], 422);
+        }
+
+        if (!$workspace->members()->where('user_id', $user->id)->exists()) {
+            return response()->json([
+                'message' => 'You are not a member of this workspace.',
+            ], 404);
+        }
+
+        $workspace->members()->detach($user->id);
+        Workspace::forgetMembership($workspace->id, $user->id);
+
+        return response()->json(['message' => 'You have left the workspace.']);
+    }
+
+    /**
      * Remove a member from the workspace.
      *
      * Security: Only Owners/Admins can remove members.

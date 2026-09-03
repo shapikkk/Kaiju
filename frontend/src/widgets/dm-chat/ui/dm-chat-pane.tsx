@@ -90,6 +90,7 @@ export function DMChatPane({ conv, onBack }: DMChatPaneProps) {
         onEdit={setEditingMsg}
         onDelete={deleteMessage}
         onScrollTo={handleScrollTo}
+        variant="dm"
         idPrefix={`dm-${conv.id}`}
         emptyLabel="Start a conversation"
         otherUserLastReadAt={conv.other_user_last_read_at}
@@ -107,6 +108,7 @@ export function DMChatPane({ conv, onBack }: DMChatPaneProps) {
             onSend={handleSend}
             onEdit={handleEdit}
             isSending={isSending}
+            placeholder={`Message ${displayName}`}
           />
         </div>
       </div>

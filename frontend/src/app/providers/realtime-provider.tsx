@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { initRealtime, destroyRealtime } from '@processes/realtime';
+import { initRealtime, destroyRealtime, subscribeUser, unsubscribeUser } from '@processes/realtime';
+import { useAuth } from '@shared/lib/auth/useAuth';
 
 interface RealtimeProviderProps {
   children: ReactNode;
@@ -14,6 +15,7 @@ interface RealtimeProviderProps {
  */
 export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   useEffect(() => {
     initRealtime();
@@ -29,6 +31,14 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
   useEffect(() => {
     (window as any).__queryClient = queryClient;
   }, [queryClient]);
+
+  // Runs after initRealtime above, and re-runs once the signed-in user is
+  // resolved, which is when the connection is actually ready to authorise.
+  useEffect(() => {
+    if (!user) return;
+    subscribeUser(user.id, queryClient);
+    return () => { unsubscribeUser(user.id); };
+  }, [user, queryClient]);
 
   return <>{children}</>;
 }

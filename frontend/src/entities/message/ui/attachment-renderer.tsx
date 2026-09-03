@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { FileText, ImageIcon, Copy, Download, Trash2 } from 'lucide-react';
+import { FileText, ImageOff, Copy, Download, Trash2 } from 'lucide-react';
 import { LightBox } from '@shared/ui/lightbox';
 import {
   ContextMenu,
@@ -13,7 +13,9 @@ import {
 interface AttachmentRendererProps {
   url: string;
   name: string | null;
-  type: 'image' | 'file';
+  /** The DM API also emits 'video' and 'audio'; both fell through to the
+   *  generic file card before, so they were never actually playable. */
+  type: 'image' | 'video' | 'audio' | 'file' | string;
   isMine: boolean;
   onDelete?: () => void;
   onImageLoad?: () => void;
@@ -22,6 +24,7 @@ interface AttachmentRendererProps {
 export function AttachmentRenderer({ url, name, type, isMine, onDelete, onImageLoad }: AttachmentRendererProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleLoad = () => {
     setLoaded(true);
@@ -48,19 +51,30 @@ export function AttachmentRenderer({ url, name, type, isMine, onDelete, onImageL
       <>
         <ContextMenu>
           <ContextMenuTrigger asChild>
-            <button onClick={() => setLightboxOpen(true)} className="mt-1.5 block focus:outline-none">
-              <div className="relative overflow-hidden rounded-xl bg-muted" style={{ aspectRatio: '4/3', width: '240px', maxWidth: '100%' }}>
-                {!loaded && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
+            <button
+              onClick={() => setLightboxOpen(true)}
+              className="group/img mt-1.5 block focus:outline-none"
+              disabled={failed}
+            >
+              <div className="relative w-[260px] max-w-full overflow-hidden rounded-xl bg-muted ring-1 ring-border/50">
+                {/* Skeleton only until the first paint; a failure swaps in a
+                    real message instead of leaving a dead grey rectangle. */}
+                {!loaded && !failed && (
+                  <div className="kj-shimmer aspect-[4/3] w-full" />
+                )}
+                {failed && (
+                  <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-1.5 text-muted-foreground/60">
+                    <ImageOff className="h-5 w-5" />
+                    <span className="text-[10px]">Image unavailable</span>
                   </div>
                 )}
                 <img
                   src={url}
                   alt={name ?? 'image'}
-                  className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                  className={`block max-h-[320px] w-full object-cover transition-all duration-300 group-hover/img:brightness-105 ${loaded && !failed ? 'opacity-100' : 'absolute inset-0 h-0 opacity-0'}`}
                   loading="lazy"
                   onLoad={handleLoad}
+                  onError={() => setFailed(true)}
                 />
               </div>
             </button>
@@ -87,6 +101,23 @@ export function AttachmentRenderer({ url, name, type, isMine, onDelete, onImageL
         </ContextMenu>
         <LightBox images={[url]} index={lightboxOpen ? 0 : null} onClose={() => setLightboxOpen(false)} />
       </>
+    );
+  }
+
+  if (type === 'video') {
+    return (
+      <video
+        src={url}
+        controls
+        preload="metadata"
+        className="mt-1.5 max-h-[320px] w-[260px] max-w-full rounded-xl bg-black ring-1 ring-border/50"
+      />
+    );
+  }
+
+  if (type === 'audio') {
+    return (
+      <audio src={url} controls className="mt-1.5 w-[260px] max-w-full" />
     );
   }
 

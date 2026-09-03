@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@shared/ui/select';
-import { useCreateTask } from '@entities/board';
+import { useCreateTask, useTags } from '@entities/board';
 import { PRIORITY_CONFIG } from "@shared/types";
 import type { Board, Priority, CreateTaskPayload, Sprint, User } from "@shared/types";
 import { Loader2 } from 'lucide-react';
@@ -30,6 +30,8 @@ interface CreateTaskDialogProps {
   boardSlug: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Preselects a column when opened from that column's "+" button. */
+  defaultColumnId?: number | null;
 }
 
 const PRIORITIES: Priority[] = ['lowest', 'low', 'medium', 'high', 'highest'];
@@ -40,6 +42,7 @@ export function CreateTaskDialog({
   boardSlug,
   open,
   onOpenChange,
+  defaultColumnId = null,
 }: CreateTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -49,6 +52,7 @@ export function CreateTaskDialog({
   const [estimatedHours, setEstimatedHours] = useState('');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [sprintId, setSprintId] = useState<string>('');
+  const [tagIds, setTagIds] = useState<number[]>([]);
 
   const createTask = useCreateTask(board.id, workspaceSlug, boardSlug);
 
@@ -62,6 +66,13 @@ export function CreateTaskDialog({
 
   const sprints: Sprint[] = board.sprints ?? [];
 
+  const { data: allTags = [] } = useTags(workspaceSlug);
+
+  const toggleTag = (tagId: number) =>
+    setTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
+    );
+
   const users = useMemo(() => {
     const map = new Map<number, User>();
     for (const col of columns) {
@@ -73,9 +84,11 @@ export function CreateTaskDialog({
     return Array.from(map.values());
   }, [columns]);
 
+  // Derived rather than synced into state: an explicit pick wins, otherwise
+  // the column whose "+" opened the dialog, otherwise the first column.
   const effectiveColumnId = columnId
     ? Number(columnId)
-    : columns[0]?.id ?? 0;
+    : defaultColumnId ?? columns[0]?.id ?? 0;
 
   const resetForm = () => {
     setTitle('');
@@ -86,6 +99,7 @@ export function CreateTaskDialog({
     setEstimatedHours('');
     setAssigneeId('');
     setSprintId('');
+    setTagIds([]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,6 +115,7 @@ export function CreateTaskDialog({
       estimated_hours: estimatedHours ? Number(estimatedHours) : undefined,
       assignee_id: assigneeId ? Number(assigneeId) : undefined,
       sprint_id: sprintId ? Number(sprintId) : undefined,
+      tag_ids: tagIds.length > 0 ? tagIds : undefined,
     };
 
     createTask.mutate(payload, {
@@ -112,7 +127,13 @@ export function CreateTaskDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setColumnId('');
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="sm:max-w-xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -155,7 +176,7 @@ export function CreateTaskDialog({
               <div className="space-y-1.5">
                 <Label>Column</Label>
                 <Select
-                  value={columnId || String(columns[0]?.id ?? '')}
+                  value={String(effectiveColumnId)}
                   onValueChange={setColumnId}
                 >
                   <SelectTrigger className="w-full">
@@ -266,6 +287,33 @@ export function CreateTaskDialog({
                 </div>
               )}
             </div>
+
+            {allTags.length > 0 && (
+              <div className="space-y-1.5">
+                <Label>Tags</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {allTags.map((tag) => {
+                    const isActive = tagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleTag(tag.id)}
+                        aria-pressed={isActive}
+                        className="rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all duration-150 hover:scale-[1.04] active:scale-95"
+                        style={
+                          isActive
+                            ? { backgroundColor: tag.color, borderColor: tag.color, color: '#fff' }
+                            : { borderColor: `${tag.color}66`, color: tag.color }
+                        }
+                      >
+                        {tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             </div>
           </ScrollArea>
 

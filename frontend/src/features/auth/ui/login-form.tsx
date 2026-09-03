@@ -2,7 +2,7 @@ import { cn } from "@shared/lib/utils"
 import { Button } from "@shared/ui/button"
 import { authApi, useAuth } from '@shared/lib/auth/useAuth'
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, useSearchParams, Link } from "react-router-dom"
 
 import {
   Card,
@@ -24,6 +24,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { refreshUser } = useAuth();
   const [email, setEmail] = useState('alice@kaiju.dev');
   const [password, setPassword] = useState('password');
@@ -38,7 +39,12 @@ export function LoginForm({
     try {
       await authApi.login({ email, password });
       await refreshUser();
-      navigate('/');
+      // Return to wherever we were sent from (an invite link, typically).
+      // Only same-origin paths, so this cannot be used as an open redirect.
+      const redirect = searchParams.get('redirect');
+      navigate(redirect && redirect.startsWith('/') && !redirect.startsWith('//')
+        ? redirect
+        : '/');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? 'Error authorization. Check your data.');

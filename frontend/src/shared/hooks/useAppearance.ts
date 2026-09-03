@@ -61,6 +61,25 @@ function readBase(): BaseTheme {
     : "zinc";
 }
 
+/**
+ * Applies the stored appearance to <html>, correcting anything invalid.
+ *
+ * Called once at startup. index.html applies the same values before first
+ * paint to avoid a flash, but this module owns the valid lists and has the
+ * final say — the boot script deliberately does not duplicate them.
+ */
+export function applyStoredAppearance(): void {
+  const accent = readAccent();
+  const base = readBase();
+
+  document.documentElement.setAttribute("data-theme", accent);
+  document.documentElement.setAttribute("data-base", base);
+
+  // Normalise storage too, so a bogus value does not survive the next reload.
+  localStorage.setItem(ACCENT_KEY, accent);
+  localStorage.setItem(BASE_KEY, base);
+}
+
 export function useAppearance() {
   const [accent, setAccentState] = useState<AccentTheme>(readAccent);
   const [base, setBaseState] = useState<BaseTheme>(readBase);

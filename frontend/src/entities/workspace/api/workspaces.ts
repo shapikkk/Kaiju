@@ -63,4 +63,9 @@ export const workspacesApi = {
   delete: async (slug: string): Promise<void> => {
     await apiClient.delete(`/workspaces/${slug}`);
   },
+
+  /** Leave a workspace you are a member of (owners must delete or hand over). */
+  leave: async (slug: string): Promise<void> => {
+    await apiClient.post(`/workspaces/${slug}/leave`);
+  },
 };

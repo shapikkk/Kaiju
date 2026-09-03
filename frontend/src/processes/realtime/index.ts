@@ -6,6 +6,8 @@ export {
   unsubscribeChannel,
   subscribeConversation,
   unsubscribeConversation,
+  subscribeUser,
+  unsubscribeUser,
   subscribeWorkspace,
   unsubscribeWorkspace,
 } from './realtimeManager';

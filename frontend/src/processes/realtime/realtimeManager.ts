@@ -112,6 +112,33 @@ export function unsubscribeConversation(conversationId: number): void {
   echoInstance?.leave(name);
 }
 
+// ─── Per-user notifications ────────────────────────────────────────────────
+
+/**
+ * Subscribes to the signed-in user's private channel.
+ *
+ * The conversation channel only reaches clients that already have the thread
+ * open, so a DM arriving while you are elsewhere left the sidebar stale until
+ * the next refetch. This carries a contentless ping instead.
+ */
+export function subscribeUser(userId: number, queryClient: QueryClient): void {
+  if (!echoInstance) return;
+  const name = `user.${userId}`;
+  const ch = echoInstance.private(name);
+  if (boundChannels.has(name)) return;
+  boundChannels.add(name);
+
+  ch.listen('.dm.notification', () => {
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  });
+}
+
+export function unsubscribeUser(userId: number): void {
+  const name = `user.${userId}`;
+  boundChannels.delete(name);
+  echoInstance?.leave(name);
+}
+
 // ─── Workspace Presence ────────────────────────────────────────────────────
 
 export function subscribeWorkspace(
