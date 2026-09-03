@@ -41,7 +41,7 @@ final class MoveTaskAction
                 'position' => $newPosition,
             ]);
 
-            return $task->fresh(['creator', 'assignee', 'tags', 'column']);
+            return $task->fresh(['board', 'creator', 'assignee', 'tags', 'column']);
         });
     }
 }

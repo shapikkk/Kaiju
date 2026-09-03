@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Check, CheckCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/avatar';
 import { BubbleMenu } from './bubble-menu';
@@ -25,7 +26,7 @@ interface BubbleProps {
   ) => React.ReactNode;
 }
 
-export function MessageBubble({
+function MessageBubbleComponent({
   msg, isMine, isConsecutive, onReply, onEdit, onDelete,
   onScrollTo, onImageLoad, idPrefix = 'chat', otherUserLastReadAt,
   renderAvatar,
@@ -132,3 +133,6 @@ export function MessageBubble({
     </div>
   );
 }
+
+// Memoised: relies on the panes passing stable callbacks.
+export const MessageBubble = memo(MessageBubbleComponent);

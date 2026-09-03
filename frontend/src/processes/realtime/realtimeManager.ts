@@ -16,6 +16,13 @@ window.Pusher = Pusher;
 /** The single persistent Echo instance for the app lifetime. */
 let echoInstance: Echo<any> | null = null;
 
+/**
+ * Channels we have already attached handlers to. Echo deduplicates the join but
+ * not the `.listen()` calls on top, so without this a repeat subscribe stacks a
+ * second set of handlers and every message is processed twice.
+ */
+const boundChannels = new Set<string>();
+
 function buildEcho(token: string | null): Echo<any> {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
   const baseUrl = apiUrl.replace(/\/api\/?$/, '');
@@ -52,6 +59,7 @@ export function initRealtime(): void {
 export function destroyRealtime(): void {
   echoInstance?.disconnect();
   echoInstance = null;
+  boundChannels.clear();
 }
 
 /** Read-only accessor for use in handlers. */
@@ -70,12 +78,17 @@ export function subscribeChannel(
   queryClient: QueryClient,
 ): void {
   if (!echoInstance) return;
-  const ch = echoInstance.join(`channel.${channelId}`);
+  const name = `channel.${channelId}`;
+  const ch = echoInstance.join(name);
+  if (boundChannels.has(name)) return;
+  boundChannels.add(name);
   channelSocketHandler(queryClient, channelId, ch as any);
 }
 
 export function unsubscribeChannel(channelId: number): void {
-  echoInstance?.leave(`channel.${channelId}`);
+  const name = `channel.${channelId}`;
+  boundChannels.delete(name);
+  echoInstance?.leave(name);
 }
 
 // ─── DM Private ────────────────────────────────────────────────────────────
@@ -86,12 +99,17 @@ export function subscribeConversation(
   queryClient: QueryClient,
 ): void {
   if (!echoInstance) return;
-  const ch = echoInstance.private(`conversation.${conversationId}`);
+  const name = `conversation.${conversationId}`;
+  const ch = echoInstance.private(name);
+  if (boundChannels.has(name)) return;
+  boundChannels.add(name);
   dmSocketHandler(queryClient, conversationId, currentUserId, ch as any);
 }
 
 export function unsubscribeConversation(conversationId: number): void {
-  echoInstance?.leave(`conversation.${conversationId}`);
+  const name = `conversation.${conversationId}`;
+  boundChannels.delete(name);
+  echoInstance?.leave(name);
 }
 
 // ─── Workspace Presence ────────────────────────────────────────────────────
@@ -101,10 +119,15 @@ export function subscribeWorkspace(
   queryClient: QueryClient,
 ): void {
   if (!echoInstance) return;
-  const ch = echoInstance.join(`workspace.${workspaceSlug}`);
+  const name = `workspace.${workspaceSlug}`;
+  const ch = echoInstance.join(name);
+  if (boundChannels.has(name)) return;
+  boundChannels.add(name);
   workspaceSocketHandler(queryClient, workspaceSlug, ch as any);
 }
 
 export function unsubscribeWorkspace(workspaceSlug: string): void {
-  echoInstance?.leave(`workspace.${workspaceSlug}`);
+  const name = `workspace.${workspaceSlug}`;
+  boundChannels.delete(name);
+  echoInstance?.leave(name);
 }

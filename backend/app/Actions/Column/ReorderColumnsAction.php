@@ -12,12 +12,24 @@ final class ReorderColumnsAction
      */
     public function execute(int $boardId, array $orderedIds): void
     {
-        DB::transaction(function () use ($boardId, $orderedIds) {
-            foreach ($orderedIds as $position => $columnId) {
-                Column::where('id', $columnId)
-                    ->where('board_id', $boardId)
-                    ->update(['position' => $position]);
-            }
+        // Must stay ahead of the interpolation below: these ids go into raw SQL.
+        $orderedIds = array_values(array_map('intval', $orderedIds));
+
+        if (empty($orderedIds)) {
+            return;
+        }
+
+        $cases = '';
+        foreach ($orderedIds as $position => $columnId) {
+            $cases .= " WHEN {$columnId} THEN {$position}";
+        }
+
+        DB::transaction(function () use ($boardId, $orderedIds, $cases) {
+            Column::where('board_id', $boardId)
+                ->whereIn('id', $orderedIds)
+                ->update([
+                    'position' => DB::raw("CASE id{$cases} ELSE position END"),
+                ]);
         });
     }
 }

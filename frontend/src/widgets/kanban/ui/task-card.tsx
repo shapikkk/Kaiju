@@ -1,3 +1,4 @@
+import { memo, useCallback, useMemo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent } from '@shared/ui/card';
@@ -12,7 +13,7 @@ interface TaskCardProps {
   isDragging?: boolean;
 }
 
-export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
+function TaskCardComponent({ task, onClick, isDragging }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -25,13 +26,44 @@ export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
     data: { type: 'task', task },
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+    }),
+    [transform, transition],
+  );
 
   const dragging = isDragging || isSortableDragging;
   const priorityCfg = PRIORITY_CONFIG[task.priority];
+
+  const handleClick = useCallback(() => {
+    if (!dragging) onClick?.(task);
+  }, [dragging, onClick, task]);
+
+  const dueLabel = useMemo(
+    () =>
+      task.due_date
+        ? new Date(task.due_date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+          })
+        : null,
+    [task.due_date],
+  );
+
+  const assigneeInitials = useMemo(
+    () =>
+      task.assignee
+        ? task.assignee.name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2)
+        : null,
+    [task.assignee],
+  );
 
   return (
     <Card
@@ -40,7 +72,7 @@ export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
       className={`group cursor-pointer border-border/50 bg-card transition-all hover:border-border hover:shadow-md active:scale-[0.98] ${
         dragging ? 'z-50 rotate-2 shadow-xl opacity-90 ring-2 ring-primary/30' : ''
       }`}
-      onClick={() => !dragging && onClick?.(task)}
+      onClick={handleClick}
     >
       <CardContent className="space-y-2.5 p-3">
         {/* Drag handle + Tags row */}
@@ -97,13 +129,10 @@ export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            {task.due_date && (
+            {dueLabel && (
               <span className="flex items-center gap-0.5">
                 <Calendar className="h-3 w-3" />
-                {new Date(task.due_date).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
+                {dueLabel}
               </span>
             )}
             {(task.comments_count ?? 0) > 0 && (
@@ -123,12 +152,7 @@ export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
                 className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground"
                 title={task.assignee.name}
               >
-                {task.assignee.name
-                  .split(' ')
-                  .map((n) => n[0])
-                  .join('')
-                  .toUpperCase()
-                  .slice(0, 2)}
+                {assigneeInitials}
               </div>
             )}
           </div>
@@ -137,3 +161,6 @@ export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
     </Card>
   );
 }
+
+// Memoised: dnd-kit re-renders the whole DndContext subtree during a drag.
+export const TaskCard = memo(TaskCardComponent);

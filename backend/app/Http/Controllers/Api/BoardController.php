@@ -19,7 +19,7 @@ class BoardController extends Controller
         if (!$workspace->hasAccess(request()->user()))
             abort(403);
 
-        $boards = $workspace->boards()->with('columns')->get();
+        $boards = $workspace->boards()->get();
 
         return BoardResource::collection($boards);
     }
@@ -45,17 +45,23 @@ class BoardController extends Controller
         if (!$workspace->hasAccess(request()->user()))
             abort(403);
 
-        $board->load(['columns', 'sprints']);
+        // Column::tasks() already orders by position.
+        $board->load([
+            'sprints',
+            'columns.tasks' => fn ($query) => $query
+                ->withCount(['comments', 'attachments']),
+            'columns.tasks.creator',
+            'columns.tasks.assignee',
+            'columns.tasks.tags',
+            'columns.tasks.epic',
+            'columns.tasks.sprint',
+        ]);
 
+        // TaskResource's key_identifier accessor reads $task->board.
         foreach ($board->columns as $column) {
-            $tasks = $column->tasks()
-                ->with(['creator', 'assignee', 'tags', 'epic', 'sprint'])
-                ->withCount(['comments', 'attachments'])
-                ->orderBy('position')
-                ->get();
-
-            $tasks->each(fn($task) => $task->setRelation('board', $board));
-            $column->setRelation('tasks', $tasks);
+            foreach ($column->tasks as $task) {
+                $task->setRelation('board', $board);
+            }
         }
 
         return new BoardResource($board);

@@ -44,6 +44,12 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
     return Array.from(map.values());
   }, [board]);
 
+  const handleTaskClick = useCallback((task: { id: number }) => {
+    setSelectedTaskId(task.id);
+  }, []);
+
+  const handleCloseTask = useCallback(() => setSelectedTaskId(null), []);
+
   const handleCreateSprint = useCallback(() => {
     if (!newSprintName.trim()) return;
     createSprint.mutate(
@@ -82,14 +88,14 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
         </div>
       )}
 
-      <KanbanBoard board={board} isLoading={isLoading} onTaskClick={(task) => setSelectedTaskId(task.id)} />
+      <KanbanBoard board={board} isLoading={isLoading} onTaskClick={handleTaskClick} />
 
       {selectedTaskId && (
         <TaskDetailPanel
           taskId={selectedTaskId}
           boardUsers={boardUsers}
           boardSprints={sprints}
-          onClose={() => setSelectedTaskId(null)}
+          onClose={handleCloseTask}
         />
       )}
 

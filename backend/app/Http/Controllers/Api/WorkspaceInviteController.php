@@ -120,6 +120,9 @@ class WorkspaceInviteController extends Controller
             'role' => $invitation->role,
         ]);
 
+        // Workspace memoises membership per request; drop the stale entry.
+        Workspace::forgetMembership($workspace->id, $user->id);
+
         $invitation->delete();
 
         return response()->json([
@@ -156,6 +159,7 @@ class WorkspaceInviteController extends Controller
         if (!$workspace->members()->where('user_id', $user->id)->exists()
             && $workspace->owner_id !== $user->id) {
             $workspace->members()->attach($user->id, ['role' => 'member']);
+            Workspace::forgetMembership($workspace->id, $user->id);
         }
 
         return redirect($frontendUrl . '/' . $workspace->slug . '/chat');
@@ -180,6 +184,7 @@ class WorkspaceInviteController extends Controller
         if (!$workspace->members()->where('user_id', $user->id)->exists()
             && $workspace->owner_id !== $user->id) {
             $workspace->members()->attach($user->id, ['role' => 'member']);
+            Workspace::forgetMembership($workspace->id, $user->id);
         }
 
         return response()->json(['slug' => $workspace->slug]);

@@ -33,6 +33,29 @@ export default defineConfig({
       "@shared": path.resolve(__dirname, "./src/shared"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Vendor only — assigning src/ modules here produced circular chunks
+        // between the realtime barrel and its manager.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+
+          if (/[\/]node_modules[\/](react|react-dom|react-router|react-router-dom|scheduler)[\/]/.test(id)) {
+            return 'react';
+          }
+          if (id.includes('@tanstack')) return 'query';
+          if (id.includes('@dnd-kit')) return 'dnd';
+          if (id.includes('laravel-echo') || id.includes('pusher-js')) return 'realtime';
+          if (id.includes('@tsparticles')) return 'particles';
+          if (id.includes('lucide-react')) return 'icons';
+
+          return 'vendor';
+        },
+      },
+    },
+    chunkSizeWarningLimit: 900,
+  },
   server: {
     host: '0.0.0.0',
     port: 5173,

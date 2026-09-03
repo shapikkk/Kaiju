@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -12,17 +13,22 @@ interface KanbanColumnProps {
   onTaskClick?: (task: Task) => void;
 }
 
-export function KanbanColumn({ column, onTaskClick }: KanbanColumnProps) {
-  const tasks = column.tasks ?? [];
+function KanbanColumnComponent({ column, onTaskClick }: KanbanColumnProps) {
+  const tasks = useMemo(() => column.tasks ?? [], [column.tasks]);
   const taskCount = tasks.length;
   const isAtLimit = column.wip_limit !== null && taskCount >= column.wip_limit;
 
+  const droppableData = useMemo(
+    () => ({ type: 'column', column }),
+    [column],
+  );
+
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${column.id}`,
-    data: { type: 'column', column },
+    data: droppableData,
   });
 
-  const taskIds = tasks.map((t) => `task-${t.id}`);
+  const taskIds = useMemo(() => tasks.map((t) => `task-${t.id}`), [tasks]);
 
   return (
     <div
@@ -92,3 +98,5 @@ export function KanbanColumn({ column, onTaskClick }: KanbanColumnProps) {
     </div>
   );
 }
+
+export const KanbanColumn = memo(KanbanColumnComponent);

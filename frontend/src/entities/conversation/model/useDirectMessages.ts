@@ -1,9 +1,12 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dmApi } from '../api/dm';
 import { subscribeConversation, unsubscribeConversation } from '@processes/realtime';
 import { useAuth } from '@shared/lib/auth/useAuth';
 import type { Conversation, DirectMessage } from "@shared/types";
+
+const EMPTY_MESSAGES: DirectMessage[] = [];
+const EMPTY_CONVERSATIONS: Conversation[] = [];
 
 export function useConversations(workspaceSlug: string | undefined) {
   const queryClient = useQueryClient();
@@ -42,7 +45,7 @@ export function useConversations(workspaceSlug: string | undefined) {
   });
 
   return {
-    conversations: query.data ?? [] as Conversation[],
+    conversations: query.data ?? EMPTY_CONVERSATIONS,
     isLoading: query.isLoading,
     findOrCreate: (targetUserId: number) => findOrCreateMutation.mutateAsync(targetUserId),
     isFindingOrCreating: findOrCreateMutation.isPending,
@@ -133,23 +136,58 @@ export function useDirectMessages(conversationId: number | null) {
         if (filtered.find((m) => m.id === msg.id)) return filtered;
         return [...filtered, msg];
       });
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+
+      // Patched locally rather than invalidated: the conversations endpoint is
+      // the heaviest read in the app and we already hold everything that changed.
+      queryClient.setQueriesData<Conversation[]>(
+        { queryKey: ['conversations'], exact: false },
+        (old) => {
+          if (!old) return old;
+          const updated = old.map((c) =>
+            c.id === conversationId ? { ...c, last_message: msg } : c,
+          );
+          return [
+            ...updated.filter((c) => c.id === conversationId),
+            ...updated.filter((c) => c.id !== conversationId),
+          ];
+        },
+      );
     },
   });
 
-  const markRead = () => {
+  const markRead = useCallback(() => {
     if (!conversationId) return;
     dmApi.markRead(conversationId).catch(() => {/* silent */});
-  };
+  }, [conversationId]);
+
+  // Destructured because `mutate` is stable while the mutation object is not.
+  const { mutate: sendMutate } = sendMutation;
+  const { mutate: editMutate } = editMutation;
+  const { mutate: deleteMutate } = deleteMutation;
+
+  const sendMessage = useCallback(
+    (body: string, replyToId?: number | null, attachment?: File | null) =>
+      sendMutate({ body, replyToId, attachment }),
+    [sendMutate],
+  );
+
+  const editMessage = useCallback(
+    (id: number, body: string) => editMutate({ id, body }),
+    [editMutate],
+  );
+
+  const deleteMessage = useCallback(
+    (id: number) => deleteMutate(id),
+    [deleteMutate],
+  );
 
   return {
-    messages: messagesQuery.data ?? [] as DirectMessage[],
+    messages: messagesQuery.data ?? EMPTY_MESSAGES,
     isLoading: messagesQuery.isLoading,
-    sendMessage: (body: string, replyToId?: number | null, attachment?: File | null) =>
-      sendMutation.mutate({ body, replyToId, attachment }),
+    sendMessage,
     isSending: sendMutation.isPending,
-    editMessage: (id: number, body: string) => editMutation.mutate({ id, body }),
-    deleteMessage: (id: number) => deleteMutation.mutate(id),
+    editMessage,
+    deleteMessage,
     markRead,
   };
 }

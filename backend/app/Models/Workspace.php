@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Workspace extends Model
 {
@@ -57,6 +58,50 @@ class Workspace extends Model
         return 'slug';
     }
 
+    /**
+     * Per-request membership cache, keyed by "workspaceId:userId".
+     *
+     * @var array<string, string|false> the pivot role, or false when not a member
+     */
+    protected static array $membershipCache = [];
+
+    /**
+     * Resolve (and memoise) the pivot role of $user in this workspace.
+     * Returns false for a non-member — distinct from a member with no role set.
+     */
+    protected function membershipRole(User $user): string|false
+    {
+        $cacheKey = $this->id . ':' . $user->id;
+
+        if (array_key_exists($cacheKey, static::$membershipCache)) {
+            return static::$membershipCache[$cacheKey];
+        }
+
+        if ($this->relationLoaded('members')) {
+            $member = $this->members->firstWhere('id', $user->id);
+            $role = $member === null
+                ? false
+                : ($member->pivot?->role ?? WorkspaceRole::Member->value);
+        } else {
+            $row = DB::table('workspace_user')
+                ->where('workspace_id', $this->id)
+                ->where('user_id', $user->id)
+                ->first(['role']);
+
+            $role = $row === null
+                ? false
+                : ($row->role ?? WorkspaceRole::Member->value);
+        }
+
+        return static::$membershipCache[$cacheKey] = $role;
+    }
+
+    /** Call after any attach/detach/role change to drop the stale entry. */
+    public static function forgetMembership(int $workspaceId, int $userId): void
+    {
+        unset(static::$membershipCache[$workspaceId . ':' . $userId]);
+    }
+
     /** Check if a user has access to this workspace. */
     public function hasAccess(User $user): bool
     {
@@ -64,30 +109,24 @@ class Workspace extends Model
             return true;
         }
 
-        if ($this->relationLoaded('members')) {
-            return $this->members->contains('id', $user->id);
-        }
-
-        return $this->members()->where('users.id', $user->id)->exists();
+        return $this->membershipRole($user) !== false;
     }
 
     /** Check if a user has at least the given role in this workspace. */
     public function userHasRole(User $user, WorkspaceRole ...$roles): bool
     {
-        if ($this->relationLoaded('members')) {
-            $member = $this->members->firstWhere('id', $user->id);
-            if (!$member || !isset($member->pivot->role)) {
-                return false;
-            }
-            return in_array(WorkspaceRole::from($member->pivot->role), $roles, true);
+        // The owner is implicitly the Owner role even without a pivot row.
+        if ($this->owner_id === $user->id
+            && in_array(WorkspaceRole::Owner, $roles, true)) {
+            return true;
         }
 
-        $pivot = $this->members()->where('user_id', $user->id)->first()?->pivot;
+        $role = $this->membershipRole($user);
 
-        if (!$pivot) {
+        if ($role === false) {
             return false;
         }
 
-        return in_array(WorkspaceRole::from($pivot->role), $roles, true);
+        return in_array(WorkspaceRole::from($role), $roles, true);
     }
 }
