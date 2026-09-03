@@ -3,6 +3,7 @@ import { KanbanBoard } from '@widgets/kanban';
 import { TaskDetailPanel } from '@widgets/task-detail';
 import { CreateTaskDialog } from '@features/create-task';
 import { useBoard, useSprints, useCreateSprint, useCreateEpic, useDeleteBoard } from '@entities/board';
+import { useWorkspaceRole } from '@entities/workspace';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import {
@@ -37,6 +38,7 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
   const createSprint = useCreateSprint(board?.id ?? 0);
   const createEpic = useCreateEpic(workspaceSlug);
   const deleteBoard = useDeleteBoard(workspaceSlug);
+  const { canManage } = useWorkspaceRole(workspaceSlug);
 
   const boardUsers = useMemo(() => {
     if (!board?.columns) return [];
@@ -143,21 +145,25 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
               <Plus className="mr-1.5 h-4 w-4" /> New Task
             </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Board actions">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  className="gap-2 text-destructive focus:text-destructive"
-                  onSelect={() => setDeleteBoardOpen(true)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete board
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Only owners and admins can delete a board, matching the
+                server-side check — no point offering an action that 403s. */}
+            {canManage && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Board actions">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    className="gap-2 text-destructive focus:text-destructive"
+                    onSelect={() => setDeleteBoardOpen(true)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Delete board
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       )}
