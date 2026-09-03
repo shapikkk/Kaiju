@@ -69,6 +69,9 @@ class WorkspaceMemberController extends Controller
             'role' => $validated['role'],
         ]);
 
+        // Workspace memoises membership per request; drop the stale entry.
+        Workspace::forgetMembership($workspace->id, $userId);
+
         return response()->json(['message' => 'Role updated successfully.']);
     }
 
@@ -95,6 +98,8 @@ class WorkspaceMemberController extends Controller
         }
 
         $workspace->members()->detach($userId);
+
+        Workspace::forgetMembership($workspace->id, $userId);
 
         return response()->json(null, 204);
     }

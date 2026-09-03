@@ -20,28 +20,28 @@ class ChannelController extends Controller
             abort(403);
         }
 
-        $general = $workspace->channels()
-            ->where('name', 'general')
-            ->first();
+        $channels = $workspace->channels()
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
+
+        $general = $channels->firstWhere('name', 'general');
 
         if (!$general) {
-            $workspace->channels()->create([
+            $general = $workspace->channels()->create([
                 'name'        => 'general',
                 'description' => 'General discussion for the whole team.',
                 'is_default'  => true,
                 'position'    => 0,
             ]);
+            $channels->prepend($general);
         } elseif (!$general->is_default) {
             $general->update(['is_default' => true]);
         }
 
-        $channels = $workspace->channels()
-            ->orderBy('position')
-            ->orderBy('id')
-            ->get()
-            ->map(fn(Channel $c) => self::serialize($c));
-
-        return response()->json(['data' => $channels]);
+        return response()->json([
+            'data' => $channels->map(fn(Channel $c) => self::serialize($c))->values(),
+        ]);
     }
 
     /**

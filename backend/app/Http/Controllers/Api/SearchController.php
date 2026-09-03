@@ -24,26 +24,40 @@ class SearchController extends Controller
 
         $like = '%' . $q . '%';
 
-        $tasks = Task::whereHas('column.board', function ($query) use ($workspace) {
-            $query->where('workspace_id', $workspace->id);
-        })
-            ->where(function ($query) use ($like) {
-                $query->where('title', 'like', $like)
-                    ->orWhere('key', 'like', $like);
-            })
-            ->with(['column:id,board_id', 'column.board:id,slug'])
-            ->select('id', 'key', 'title', 'column_id', 'priority')
-            ->orderByDesc('updated_at')
-            ->limit(8)
-            ->get()
-            ->map(fn (Task $task) => [
+        // Reused below to scope the task query and to build each display key.
+        $boardSlugs = $workspace->boards()->pluck('slug', 'id');
+
+        $tasks = collect();
+
+        if ($boardSlugs->isNotEmpty()) {
+            $taskQuery = Task::query()
+                ->whereIn('board_id', $boardSlugs->keys())
+                ->select('id', 'title', 'priority', 'board_id', 'task_number')
+                ->orderByDesc('updated_at')
+                ->limit(8);
+
+            // A task key ("PREFIX-12") is derived, not a column, so it cannot be
+            // matched with LIKE; match the trailing number against task_number.
+            $taskNumber = $this->parseTaskNumber($q);
+
+            $taskQuery->where(function ($query) use ($like, $taskNumber) {
+                $query->where('title', 'like', $like);
+
+                if ($taskNumber !== null) {
+                    $query->orWhere('task_number', $taskNumber);
+                }
+            });
+
+            $tasks = $taskQuery->get()->map(fn (Task $task) => [
                 'id'             => $task->id,
-                'key'            => $task->key,
+                'key'            => strtoupper($boardSlugs[$task->board_id] ?? 'TASK')
+                                    . '-' . $task->task_number,
                 'title'          => $task->title,
-                'priority'       => $task->priority,
-                'board_slug'     => $task->column->board->slug,
+                'priority'       => $task->priority?->value,
+                'board_slug'     => $boardSlugs[$task->board_id] ?? null,
                 'workspace_slug' => $workspace->slug,
             ]);
+        }
 
         $boards = $workspace->boards()
             ->where('name', 'like', $like)
@@ -66,5 +80,17 @@ class SearchController extends Controller
             'boards' => $boards->values(),
             'users'  => $users->values(),
         ]);
+    }
+
+    /**
+     * Extract a task number from a query like "KAI-42", "kai 42" or "42".
+     */
+    private function parseTaskNumber(string $q): ?int
+    {
+        if (preg_match('/(\d+)\s*$/', $q, $matches)) {
+            return (int) $matches[1];
+        }
+
+        return null;
     }
 }

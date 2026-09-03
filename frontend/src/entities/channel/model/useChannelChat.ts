@@ -2,9 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { chatApi } from '../api/chat';
 import { useQueryClient as useQC } from '@tanstack/react-query';
 import { subscribeChannel, unsubscribeChannel } from '@processes/realtime';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useAuth } from '@shared/lib/auth/useAuth';
 import type { Channel, CreateChannelPayload, UpdateChannelPayload, WorkspaceMessage } from "@shared/types";
+
+const EMPTY_MESSAGES: WorkspaceMessage[] = [];
 
 export interface OnlineMember {
   id: number;
@@ -162,15 +164,35 @@ export function useChannelChat(channelId: number | undefined) {
     },
   });
 
+  // Destructured because `mutate` is stable while the mutation object is not.
+  const { mutate: sendMutate } = sendMutation;
+  const { mutate: editMutate } = editMutation;
+  const { mutate: deleteMutate } = deleteMutation;
+
+  const sendMessage = useCallback(
+    (body: string, replyToId?: number | null, attachment?: File | null) =>
+      sendMutate({ body, replyToId, attachment }),
+    [sendMutate],
+  );
+
+  const editMessage = useCallback(
+    (id: number, body: string) => editMutate({ id, body }),
+    [editMutate],
+  );
+
+  const deleteMessage = useCallback(
+    (id: number) => deleteMutate(id),
+    [deleteMutate],
+  );
+
   return {
-    messages: messagesQuery.data ?? [] as WorkspaceMessage[],
+    messages: messagesQuery.data ?? EMPTY_MESSAGES,
     isLoading: messagesQuery.isLoading,
     isError: messagesQuery.isError,
     onlineMembers,
-    sendMessage: (body: string, replyToId?: number | null, attachment?: File | null) =>
-      sendMutation.mutate({ body, replyToId, attachment }),
+    sendMessage,
     isSending: sendMutation.isPending,
-    editMessage: (id: number, body: string) => editMutation.mutate({ id, body }),
-    deleteMessage: (id: number) => deleteMutation.mutate(id),
+    editMessage,
+    deleteMessage,
   };
 }

@@ -58,9 +58,17 @@ class Board extends Model
     /** Atomically increment the task counter and return the new number. */
     public function nextTaskNumber(): int
     {
-        $this->increment('task_counter');
-        $this->refresh();
+        // Read under lock: a plain increment-then-read can hand two concurrent
+        // creates the same number.
+        $next = (int) static::whereKey($this->getKey())
+            ->lockForUpdate()
+            ->value('task_counter') + 1;
 
-        return $this->task_counter;
+        static::whereKey($this->getKey())->update(['task_counter' => $next]);
+
+        $this->task_counter = $next;
+        $this->syncOriginalAttribute('task_counter');
+
+        return $next;
     }
 }

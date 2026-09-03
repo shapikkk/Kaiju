@@ -50,6 +50,11 @@ export function useUpdateTask(boardQueryKey: unknown[]) {
   });
 }
 
+/**
+ * No onSuccess by design: KanbanBoard already applies the move to the board
+ * cache optimistically, so refetching would only discard that work and re-pull
+ * the full board once per drag. On error we resync.
+ */
 export function useMoveTask(boardQueryKey: unknown[]) {
   const qc = useQueryClient();
   return useMutation({
@@ -60,9 +65,6 @@ export function useMoveTask(boardQueryKey: unknown[]) {
       taskId: number;
       payload: MoveTaskPayload;
     }) => tasksApi.move(taskId, payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: boardQueryKey });
-    },
     onError: () => {
       qc.invalidateQueries({ queryKey: boardQueryKey });
     },

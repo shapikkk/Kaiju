@@ -31,9 +31,19 @@ final class CreateBoardAction
                 ['name' => 'Done', 'slug' => 'done', 'position' => 4, 'color' => '#22c55e', 'is_done_column' => true],
             ];
 
-            foreach ($defaultColumns as $columnData) {
-                $board->columns()->create($columnData);
-            }
+            // insert() bypasses Eloquent, so timestamps must be set by hand.
+            $now = now();
+
+            $board->columns()->insert(array_map(
+                fn (array $columnData) => $columnData + [
+                    'board_id'       => $board->id,
+                    'is_done_column' => false,
+                    'wip_limit'      => null,
+                    'created_at'     => $now,
+                    'updated_at'     => $now,
+                ],
+                $defaultColumns,
+            ));
 
             return $board->load('columns');
         });
