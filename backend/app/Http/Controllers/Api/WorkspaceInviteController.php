@@ -65,14 +65,23 @@ class WorkspaceInviteController extends Controller
             abort(403, 'You do not have permission to create invite links.');
         }
 
-        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-            'workspaces.join',
-            now()->addHours(48),
-        ['workspace' => $workspace->slug]
-        );
+        // Reuse a token that is still valid so repeated clicks on "copy link"
+        // do not silently invalidate a link someone already shared.
+        if (!$workspace->hasUsableInviteToken()) {
+            $workspace->forceFill([
+                'invite_token' => Str::random(48),
+                'invite_token_expires_at' => now()->addDays(7),
+            ])->save();
+        }
+
+        // A frontend URL, not an API one. The old link pointed at the API,
+        // where a browser navigation carries no bearer token, so every click
+        // — even from a signed-in user — bounced to the login page.
+        $frontendUrl = rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/');
 
         return response()->json([
-            'url' => $url
+            'url' => $frontendUrl . '/invite/' . $workspace->invite_token,
+            'expires_at' => $workspace->invite_token_expires_at->toISOString(),
         ], 200);
     }
 
@@ -149,34 +158,38 @@ class WorkspaceInviteController extends Controller
             return redirect($frontendUrl . '/?invite_error=expired');
         }
 
-        $user = $request->user('sanctum');
-
-        if (!$user) {
-            return redirect($frontendUrl . '/login?invite=' . $workspace->slug)
-                ->cookie('invite_workspace', $workspace->slug, 60);
+        // Links shared before tokens existed still land here. Mint one if
+        // needed and hand off to the frontend accept page, which can
+        // authenticate properly; a plain browser navigation to the API cannot.
+        if (!$workspace->hasUsableInviteToken()) {
+            $workspace->forceFill([
+                'invite_token' => Str::random(48),
+                'invite_token_expires_at' => now()->addDays(7),
+            ])->save();
         }
 
-        if (!$workspace->members()->where('user_id', $user->id)->exists()
-            && $workspace->owner_id !== $user->id) {
-            $workspace->members()->attach($user->id, ['role' => 'member']);
-            Workspace::forgetMembership($workspace->id, $user->id);
-        }
-
-        return redirect($frontendUrl . '/' . $workspace->slug . '/chat');
+        return redirect($frontendUrl . '/invite/' . $workspace->invite_token);
     }
 
     /**
-     * Accept a general invite link using a workspace slug token.
+     * Join a workspace through its shareable invite token.
      *
-     * The {token} route parameter carries the workspace slug extracted by the
-     * frontend from the signed URL returned by generateLink().
+     * This previously looked the workspace up by *slug* and validated nothing,
+     * so any signed-in user could join any workspace by guessing its slug. It
+     * now requires the unguessable token issued by generateLink().
      */
     public function acceptLink(Request $request, string $token): JsonResponse
     {
-        $workspace = Workspace::where('slug', $token)->first();
+        $workspace = Workspace::where('invite_token', $token)->first();
 
         if (!$workspace) {
-            return response()->json(['message' => 'Invalid invite link.'], 404);
+            return response()->json(['message' => 'This invite link is not valid.'], 404);
+        }
+
+        if (!$workspace->hasUsableInviteToken()) {
+            return response()->json([
+                'message' => 'This invite link has expired. Ask for a new one.',
+            ], 410);
         }
 
         $user = $request->user();
@@ -187,6 +200,9 @@ class WorkspaceInviteController extends Controller
             Workspace::forgetMembership($workspace->id, $user->id);
         }
 
-        return response()->json(['slug' => $workspace->slug]);
+        return response()->json([
+            'slug' => $workspace->slug,
+            'name' => $workspace->name,
+        ]);
     }
 }

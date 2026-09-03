@@ -6,14 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kaiju</title>
     <script>
+      /*
+       * Applies the saved appearance before first paint, so the app does not
+       * flash the default palette on load.
+       *
+       * Deliberately no allowlist here. This script used to duplicate the list
+       * of valid accents and bases, that copy drifted from the real one, and
+       * anything missing from it was silently discarded on refresh — which read
+       * as "appearance resets itself". The module in shared/hooks/useAppearance
+       * is the single source of truth; it revalidates on boot and corrects
+       * anything bogus a moment later. The regex here is only to keep an
+       * attacker-controlled localStorage value out of an attribute.
+       */
       (function () {
-        var ACCENTS = ["zinc","blue","rose","emerald","orange","violet"];
-        var BASES   = ["zinc","slate","neutral"];
-        var el = document.documentElement;
-        var accent = localStorage.getItem("accent-theme");
-        var base   = localStorage.getItem("base-theme");
-        el.setAttribute("data-theme", ACCENTS.includes(accent) ? accent : "zinc");
-        el.setAttribute("data-base",  BASES.includes(base)   ? base   : "zinc");
+        try {
+          var el = document.documentElement;
+          var safe = function (value, fallback) {
+            return typeof value === "string" && /^[a-z]{2,12}$/.test(value)
+              ? value
+              : fallback;
+          };
+
+          el.setAttribute("data-theme", safe(localStorage.getItem("accent-theme"), "blue"));
+          el.setAttribute("data-base", safe(localStorage.getItem("base-theme"), "zinc"));
+
+          var mode = localStorage.getItem("theme");
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var dark = mode === "dark" || (mode !== "light" && prefersDark);
+          el.classList.add(dark ? "dark" : "light");
+        } catch (e) {
+          /* private mode or blocked storage — fall through to defaults */
+        }
       })();
     </script>
   </head>

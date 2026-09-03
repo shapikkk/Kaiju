@@ -2,14 +2,17 @@ import { useState, useMemo, useCallback } from 'react';
 import { KanbanBoard } from '@widgets/kanban';
 import { TaskDetailPanel } from '@widgets/task-detail';
 import { CreateTaskDialog } from '@features/create-task';
-import { useBoard, useSprints, useCreateSprint, useCreateEpic } from '@entities/board';
+import { useBoard, useSprints, useCreateSprint, useCreateEpic, useDeleteBoard } from '@entities/board';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import {
   Dialog, DialogContent, DialogDescription,
   DialogFooter, DialogHeader, DialogTitle,
 } from '@shared/ui/dialog';
-import { Plus, Zap, Timer } from 'lucide-react';
+import { Plus, Zap, Timer, MoreHorizontal, Trash2, AlertTriangle } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@shared/ui/dropdown-menu';
 import type { User } from '@shared/types';
 
 interface BoardLayoutProps {
@@ -28,10 +31,12 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
   const [newSprintName, setNewSprintName] = useState('');
   const [newEpicName, setNewEpicName] = useState('');
   const [newEpicColor, setNewEpicColor] = useState('#6366f1');
+  const [deleteBoardOpen, setDeleteBoardOpen] = useState(false);
 
   const { data: sprints = [] } = useSprints(board?.id ?? 0);
   const createSprint = useCreateSprint(board?.id ?? 0);
   const createEpic = useCreateEpic(workspaceSlug);
+  const deleteBoard = useDeleteBoard(workspaceSlug);
 
   const boardUsers = useMemo(() => {
     if (!board?.columns) return [];
@@ -137,6 +142,22 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
             <Button size="sm" onClick={handleNewTask}>
               <Plus className="mr-1.5 h-4 w-4" /> New Task
             </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Board actions">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  className="gap-2 text-destructive focus:text-destructive"
+                  onSelect={() => setDeleteBoardOpen(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete board
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       )}
@@ -167,6 +188,31 @@ export function BoardLayout({ workspaceSlug, boardSlug, initialTaskId = null }: 
           defaultColumnId={createInColumnId}
         />
       )}
+
+      <Dialog open={deleteBoardOpen} onOpenChange={setDeleteBoardOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" /> Delete Board
+            </DialogTitle>
+            <DialogDescription>
+              Delete <strong>{board?.name}</strong>? Its columns and{' '}
+              {taskTotal} {taskTotal === 1 ? 'task' : 'tasks'} will be permanently
+              removed. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteBoardOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteBoard.isPending}
+              onClick={() => board && deleteBoard.mutate(board.slug)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={sprintDialogOpen} onOpenChange={setSprintDialogOpen}>
         <DialogContent className="sm:max-w-sm">

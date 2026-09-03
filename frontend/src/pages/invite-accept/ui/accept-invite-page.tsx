@@ -15,7 +15,11 @@ export function AcceptInvitePage() {
   useEffect(() => {
     if (isAuthLoading) return;
     if (!user) {
-      navigate('/login', { replace: true });
+      // Carry the invite through login, otherwise the link is silently lost
+      // and the person lands on an empty home screen never having joined.
+      navigate(`/login?redirect=${encodeURIComponent(`/invite/${token}`)}`, {
+        replace: true,
+      });
       return;
     }
 

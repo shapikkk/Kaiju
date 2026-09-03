@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // Members
             Route::get('/workspaces/{workspace:slug}/members', [WorkspaceMemberController::class , 'index']);
+            Route::post('/workspaces/{workspace:slug}/leave', [WorkspaceMemberController::class , 'leave']);
             Route::patch('/workspaces/{workspace:slug}/members/{userId}', [WorkspaceMemberController::class , 'update']);
             Route::delete('/workspaces/{workspace:slug}/members/{userId}', [WorkspaceMemberController::class , 'destroy']);
 

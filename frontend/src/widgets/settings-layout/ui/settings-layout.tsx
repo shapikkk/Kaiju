@@ -5,7 +5,7 @@ import type { AccentTheme, BaseTheme } from '@shared/hooks/useAppearance';
 import { useActiveWorkspace } from '@entities/channel/model/useActiveWorkspace';
 import { useAuth } from '@shared/lib/auth/useAuth';
 import {
-  useWorkspace, useUpdateWorkspace, useDeleteWorkspace,
+  useWorkspace, useUpdateWorkspace, useDeleteWorkspace, useLeaveWorkspace,
 } from '@entities/workspace';
 import {
   useUpdateProfile, useUpdateProfileDetails,
@@ -25,7 +25,7 @@ import {
 } from '@shared/ui/dialog';
 import {
   User, Palette, Building2, Bell, Sun, Moon, Monitor,
-  Upload, AlertTriangle, Loader2, CheckCircle2, Lock,
+  Upload, AlertTriangle, Loader2, CheckCircle2, Lock, LogOut,
 } from 'lucide-react';
 
 // ─── Types & constants ────────────────────────────────────────────────────────
@@ -333,9 +333,15 @@ function WorkspaceTab() {
   const { data: workspace, isLoading } = useWorkspace(workspaceSlug ?? '');
   const [name, setName] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const updateWorkspace = useUpdateWorkspace(workspaceSlug ?? '');
   const deleteWorkspace = useDeleteWorkspace();
+  const leaveWorkspace = useLeaveWorkspace();
+  const { user } = useAuth();
   const effectiveName = name ?? workspace?.name ?? '';
+  // Owners cannot leave — there would be nobody left to administer the
+  // workspace — so they get Delete and everyone else gets Leave.
+  const isOwner = !!user && workspace?.owner?.id === user.id;
 
   if (!workspaceSlug) {
     return (
@@ -369,12 +375,34 @@ function WorkspaceTab() {
       <Card className="border-destructive">
         <CardHeader><CardTitle className="text-base text-destructive">Danger Zone</CardTitle><CardDescription>Irreversible and destructive actions.</CardDescription></CardHeader>
         <CardContent>
-          <div className="flex items-start justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-            <div><p className="text-sm font-medium">Delete this workspace</p><p className="mt-0.5 text-sm text-muted-foreground">Once deleted, all boards, tasks, and data will be permanently removed. This action cannot be undone.</p></div>
-            <Button variant="destructive" size="sm" className="shrink-0" onClick={() => setDeleteOpen(true)}>Delete Workspace</Button>
-          </div>
+          {isOwner ? (
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+              <div><p className="text-sm font-medium">Delete this workspace</p><p className="mt-0.5 text-sm text-muted-foreground">Once deleted, all boards, tasks, and data will be permanently removed. This action cannot be undone.</p></div>
+              <Button variant="destructive" size="sm" className="shrink-0" onClick={() => setDeleteOpen(true)}>Delete Workspace</Button>
+            </div>
+          ) : (
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+              <div><p className="text-sm font-medium">Leave this workspace</p><p className="mt-0.5 text-sm text-muted-foreground">You will lose access to its boards and chats. An admin can invite you back.</p></div>
+              <Button variant="destructive" size="sm" className="shrink-0" onClick={() => setLeaveOpen(true)}><LogOut className="mr-2 h-3.5 w-3.5" />Leave Workspace</Button>
+            </div>
+          )}
         </CardContent>
       </Card>
+      <Dialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><LogOut className="h-4 w-4 text-destructive" />Leave Workspace</DialogTitle>
+            <DialogDescription>Leave <strong>{workspace.name}</strong>? You will lose access to its boards and chats until someone invites you back.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeaveOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => leaveWorkspace.mutate(workspace.slug)} disabled={leaveWorkspace.isPending}>
+              {leaveWorkspace.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Leave
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>

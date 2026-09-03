@@ -51,6 +51,18 @@ export function useDeleteWorkspace() {
   });
 }
 
+export function useLeaveWorkspace() {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  return useMutation({
+    mutationFn: (slug: string) => workspacesApi.leave(slug),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['workspaces'] });
+      navigate('/', { replace: true });
+    },
+  });
+}
+
 export function useSendInvite(workspaceSlug: string) {
   return useMutation({
     mutationFn: (payload: { invites: { email: string; role: string }[] }) =>

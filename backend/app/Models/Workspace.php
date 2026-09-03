@@ -19,7 +19,24 @@ class Workspace extends Model
         'slug',
         'description',
         'owner_id',
+        'invite_token',
+        'invite_token_expires_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'invite_token_expires_at' => 'datetime',
+        ];
+    }
+
+    /** True when the shareable invite link is present and still valid. */
+    public function hasUsableInviteToken(): bool
+    {
+        return $this->invite_token !== null
+            && $this->invite_token_expires_at !== null
+            && $this->invite_token_expires_at->isFuture();
+    }
 
     public function owner(): BelongsTo
     {

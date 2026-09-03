@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { boardsApi } from '../api/boards';
 import type { CreateBoardPayload } from '@shared/types';
 
@@ -25,5 +26,20 @@ export function useCreateBoard(workspaceSlug: string) {
       boardsApi.create(workspaceSlug, payload),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ['boards', workspaceSlug] }),
+  });
+}
+
+export function useDeleteBoard(workspaceSlug: string) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  return useMutation({
+    mutationFn: (boardSlug: string) =>
+      boardsApi.destroy(workspaceSlug, boardSlug),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['boards', workspaceSlug] });
+      // The deleted board's route no longer resolves; fall back to the
+      // workspace, which redirects to whichever board is left.
+      navigate(`/${workspaceSlug}`, { replace: true });
+    },
   });
 }

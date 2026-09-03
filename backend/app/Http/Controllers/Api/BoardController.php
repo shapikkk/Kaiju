@@ -83,9 +83,14 @@ class BoardController extends Controller
         return new BoardResource($board->fresh('columns'));
     }
 
-    public function destroy(Board $board): JsonResponse
+    /**
+     * The route is nested (workspaces.boards), so it supplies both parameters.
+     * Declaring only $board made Laravel bind the *workspace slug string* to
+     * it, and every delete died with a TypeError before reaching this body.
+     */
+    public function destroy(Workspace $workspace, Board $board): JsonResponse
     {
-        if (!$board->workspace->hasAccess(request()->user()))
+        if (!$workspace->hasAccess(request()->user()))
             abort(403);
 
         $board->delete();
