@@ -256,6 +256,13 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.28.5"
 
+"@conarti/eslint-plugin-feature-sliced@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@conarti/eslint-plugin-feature-sliced/-/eslint-plugin-feature-sliced-1.0.5.tgz#7f177b673256f066221a73363f2f1b6a5a8612bc"
+  integrity sha512-Gx90Zupi8nv6cCP3O6cYWE9GT4RIw0D9JBHWeUwXEv7qmjCd3dXSqDEmQchN7k41hhCPupZvMevH4JrSORcVjQ==
+  dependencies:
+    picomatch "^2.3.1"
+
 "@dnd-kit/accessibility@^3.1.1":
   version "3.1.1"
   resolved "https://registry.npmjs.org/@dnd-kit/accessibility/-/accessibility-3.1.1.tgz"
@@ -5339,3 +5346,8 @@ zod@^3.24.1:
   version "4.3.6"
   resolved "https://registry.npmjs.org/zod/-/zod-4.3.6.tgz"
   integrity sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==
+
+zustand@^5.0.12:
+  version "5.0.15"
+  resolved "https://registry.yarnpkg.com/zustand/-/zustand-5.0.15.tgz#42bddf35647cb80a818a8943a69f6618c126fcfe"
+  integrity sha512-MpSEjRiBkA9crSYeOUH32rJC7SVqAbm0Fqcqge/bUi2PPoLcBWKOsG+C8mevmpr8TwXHBVkChbbJiyvkE+i/3A==
