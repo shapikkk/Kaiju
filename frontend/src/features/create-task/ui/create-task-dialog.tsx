@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@shared/ui/select';
-import { useCreateTask } from '@entities/board';
+import { useCreateTask, useTags } from '@entities/board';
 import { PRIORITY_CONFIG } from "@shared/types";
 import type { Board, Priority, CreateTaskPayload, Sprint, User } from "@shared/types";
 import { Loader2 } from 'lucide-react';
@@ -52,6 +52,7 @@ export function CreateTaskDialog({
   const [estimatedHours, setEstimatedHours] = useState('');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [sprintId, setSprintId] = useState<string>('');
+  const [tagIds, setTagIds] = useState<number[]>([]);
 
   const createTask = useCreateTask(board.id, workspaceSlug, boardSlug);
 
@@ -64,6 +65,13 @@ export function CreateTaskDialog({
   );
 
   const sprints: Sprint[] = board.sprints ?? [];
+
+  const { data: allTags = [] } = useTags(workspaceSlug);
+
+  const toggleTag = (tagId: number) =>
+    setTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
+    );
 
   const users = useMemo(() => {
     const map = new Map<number, User>();
@@ -91,6 +99,7 @@ export function CreateTaskDialog({
     setEstimatedHours('');
     setAssigneeId('');
     setSprintId('');
+    setTagIds([]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -106,6 +115,7 @@ export function CreateTaskDialog({
       estimated_hours: estimatedHours ? Number(estimatedHours) : undefined,
       assignee_id: assigneeId ? Number(assigneeId) : undefined,
       sprint_id: sprintId ? Number(sprintId) : undefined,
+      tag_ids: tagIds.length > 0 ? tagIds : undefined,
     };
 
     createTask.mutate(payload, {
@@ -277,6 +287,33 @@ export function CreateTaskDialog({
                 </div>
               )}
             </div>
+
+            {allTags.length > 0 && (
+              <div className="space-y-1.5">
+                <Label>Tags</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {allTags.map((tag) => {
+                    const isActive = tagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleTag(tag.id)}
+                        aria-pressed={isActive}
+                        className="rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all duration-150 hover:scale-[1.04] active:scale-95"
+                        style={
+                          isActive
+                            ? { backgroundColor: tag.color, borderColor: tag.color, color: '#fff' }
+                            : { borderColor: `${tag.color}66`, color: tag.color }
+                        }
+                      >
+                        {tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             </div>
           </ScrollArea>
 

@@ -3,12 +3,15 @@ import { useParams } from 'react-router-dom';
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
   defaultDropAnimation,
   defaultDropAnimationSideEffects,
+  getFirstCollision,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
   PointerSensor,
+  type CollisionDetection,
   type DragStartEvent,
   type DragOverEvent,
   type DragEndEvent,
@@ -43,6 +46,34 @@ export function KanbanBoard({
     [workspaceSlug, boardSlug],
   );
   const moveTask = useMoveTask(boardQueryKey);
+
+  /*
+   * closestCorners measures the *dragged card's* corners against every
+   * droppable. Because the card is a tall element trailing the cursor, the
+   * corner nearest a column often fell outside it, so a drop only registered
+   * over a narrow band. Resolving from the pointer instead means the drop
+   * lands wherever the cursor is, which is what people actually expect.
+   *
+   * Column droppables are preferred over task droppables so that dropping
+   * anywhere in a column's empty space works, not just onto another card.
+   */
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    const pointerCollisions = pointerWithin(args);
+    const collisions = pointerCollisions.length > 0
+      ? pointerCollisions
+      : rectIntersection(args);
+
+    if (collisions.length === 0) return collisions;
+
+    const overTask = collisions.find((c) => String(c.id).startsWith('task-'));
+    if (overTask) return [overTask];
+
+    const overColumn = collisions.find((c) => String(c.id).startsWith('column-'));
+    if (overColumn) return [overColumn];
+
+    const first = getFirstCollision(collisions);
+    return first === null ? [] : collisions;
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -234,7 +265,7 @@ export function KanbanBoard({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}

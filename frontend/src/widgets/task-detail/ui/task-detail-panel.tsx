@@ -29,8 +29,8 @@ interface TaskDetailPanelProps {
 
 const PRIORITIES: Priority[] = ['lowest', 'low', 'medium', 'high', 'highest'];
 
-/** Kept in step with the exit animation so the sheet is gone before unmount. */
-const CLOSE_ANIM_MS = 220;
+/** Must match the panel's exit transition, or unmount clips it mid-slide. */
+const CLOSE_ANIM_MS = 300;
 
 export function TaskDetailPanel({
   taskId,
@@ -52,11 +52,28 @@ export function TaskDetailPanel({
   const commentMutations = { createComment, updateComment, deleteComment };
 
   const [closing, setClosing] = useState(false);
+  const [entered, setEntered] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  /*
+   * Enter and exit are driven by a single CSS transition rather than by
+   * swapping animation classes. Swapping `kj-panel` for an `animate-out`
+   * class restarted the animation, and the frame between the two rendered
+   * the sheet at its natural position — which is the blink on close.
+   */
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const shown = entered && !closing;
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
+      // A dropdown or popover owns Escape first; otherwise dismissing a
+      // select would also tear down the whole sheet behind it.
+      if (document.querySelector('[data-radix-popper-content-wrapper]')) return;
       setClosing(true);
       window.setTimeout(onClose, CLOSE_ANIM_MS);
     };
@@ -109,7 +126,8 @@ export function TaskDetailPanel({
     <div
       className={cn(
         'fixed inset-0 z-[60] flex items-stretch justify-end bg-black/40 backdrop-blur-[2px]',
-        closing ? 'animate-out fade-out duration-200' : 'kj-scrim',
+        'transition-opacity duration-200 ease-out motion-reduce:transition-none',
+        shown ? 'opacity-100' : 'opacity-0',
       )}
       onClick={(e) => { if (e.target === e.currentTarget) requestClose(); }}
     >
@@ -118,9 +136,8 @@ export function TaskDetailPanel({
         aria-modal="true"
         className={cn(
           'flex h-full w-full max-w-xl flex-col border-l bg-background shadow-[-24px_0_60px_-24px_rgba(0,0,0,0.6)]',
-          closing
-            ? 'animate-out slide-out-to-right-8 fade-out duration-200'
-            : 'kj-panel',
+          'transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none',
+          shown ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0',
         )}
       >
         {children}
