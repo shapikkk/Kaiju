@@ -439,7 +439,7 @@
   --accent-foreground: oklch(0.216 0.006 56.043);
   --border: oklch(0.923 0.003 48.717);
   --input: oklch(0.923 0.003 48.717);
-  --sidebar: oklch(0.985 0.001 106.423);
+  --sidebar: oklch(0.977 0.002 106.4);
   --sidebar-foreground: oklch(0.147 0.004 49.813);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -729,7 +729,13 @@
   --sidebar-ring: oklch(0.45 0.007 75);
 }
 
-/* ── Sidebar transparency — lets particles subtly show through ── */
+/* ── Sidebar transparency — lets particles subtly show through ──
+   The same 88% mix in both modes: the declaration reads --sidebar, which
+   already differs per theme, and the particles are mid-grey (#888888) so
+   they register against a near-white sidebar as well as a near-black one.
+   The light selector also covers the no-class case, matching the base
+   tone blocks above. */
+:root:not(.dark) [data-sidebar="sidebar"],
 .dark [data-sidebar="sidebar"] {
   background: color-mix(in oklch, var(--sidebar) 88%, transparent);
   backdrop-filter: blur(12px);
